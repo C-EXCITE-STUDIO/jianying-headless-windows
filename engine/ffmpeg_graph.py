@@ -35,6 +35,26 @@ def atempo_chain(speed):
     return ','.join(parts)
 
 
+def linear_expression(points, offset_us=0):
+    expression = f'{float(points[-1]["value"]):.6f}'
+    for left, right in reversed(list(zip(points, points[1:]))):
+        start = (float(left['at_us']) + offset_us) / MICROS
+        end = (float(right['at_us']) + offset_us) / MICROS
+        first = float(left['value'])
+        slope = float(right['value']) - first
+        linear = f'({first:.6f}+({slope:.6f})*(t-{start:.6f})/{end-start:.6f})'
+        expression = f'if(lt(t,{end:.6f}),{linear},{expression})'
+    return expression
+
+
+def volume_filter(segment):
+    points = segment.get('keyframes', {}).get('volume')
+    if not points:
+        return f'volume={float(segment.get("volume", 1)):.6f}'
+    expression = linear_expression(points)
+    return f"volume='{expression}':eval=frame"
+
+
 def material_index(timeline):
     result = {}
     for values in timeline.get('materials', {}).values():
@@ -85,8 +105,13 @@ def build(timeline, work, font=None):
             else:
                 scale = float(segment.get('scale', 1))
                 chain += f',scale=iw*{scale:.6f}:ih*{scale:.6f},setsar=1'
-                x = f'(W-w)/2+({float(segment.get("x", 0)):.6f})*W/2'
-                y = f'(H-h)/2-({float(segment.get("y", 0)):.6f})*H/2'
+                series = segment.get('keyframes', {})
+                x_value = (linear_expression(series['x'], start) if 'x' in series else
+                           f'{float(segment.get("x", 0)):.6f}')
+                y_value = (linear_expression(series['y'], start) if 'y' in series else
+                           f'{float(segment.get("y", 0)):.6f}')
+                x = f'(W-w)/2+({x_value})*W/2'
+                y = f'(H-h)/2-({y_value})*H/2'
             chain += f',setpts=PTS-STARTPTS+{sec(start)}/TB[{raw}]'
             filters.append(chain)
             filters.append(f"{current_video}[{raw}]overlay=x='{x}':y='{y}':eof_action=pass:"
@@ -97,7 +122,7 @@ def build(timeline, work, font=None):
                 label = f'av{ti}_{si}'
                 audio = (f'[{index}:a]atrim=start={sec(source["start"])}:duration={sec(source["duration"])},'
                          f'asetpts=PTS-STARTPTS,{atempo_chain(speed)},'
-                         f'volume={float(segment.get("volume", 1)):.6f},'
+                         f'{volume_filter(segment)},'
                          f'apad,atrim=duration={sec(duration)},adelay={round(start / 1000)}:all=1[{label}]')
                 filters.append(audio)
                 audio_parts.append(f'[{label}]')
@@ -114,7 +139,7 @@ def build(timeline, work, font=None):
             filters.append(
                 f'[{index}:a]atrim=start={sec(source["start"])}:duration={sec(source["duration"])},'
                 f'asetpts=PTS-STARTPTS,{atempo_chain(segment.get("speed", 1))},'
-                f'volume={float(segment.get("volume", 1)):.6f},'
+                f'{volume_filter(segment)},'
                 f'apad,atrim=duration={sec(duration)},adelay={round(start / 1000)}:all=1[{label}]')
             audio_parts.append(f'[{label}]')
 

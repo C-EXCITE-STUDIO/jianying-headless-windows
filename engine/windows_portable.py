@@ -123,6 +123,35 @@ def keys(value, allowed, label):
     require(not unknown, label + ' has unsupported fields: ' + ', '.join(sorted(unknown)))
 
 
+def validate_keyframes(segment, duration_us, source_start, speed, kind, track_index):
+    if 'keyframes' not in segment:
+        return
+    series = segment['keyframes']
+    allowed = {'volume'} if kind == 'audio' else {'volume', 'x', 'y'}
+    require(isinstance(series, dict) and series and not set(series) - allowed,
+            'Windows FFmpeg supports only volume and overlay position keyframes')
+    require(track_index != 0 or not ({'x', 'y'} & set(series)),
+            'Position keyframes on the main video track are not yet supported')
+    require(source_start == 0 and speed == 1,
+            'Keyframes on trimmed or speed-adjusted sources need verified time mapping')
+    for channel, points in series.items():
+        require(isinstance(points, list) and len(points) >= 2,
+                'Keyframes require at least two points')
+        previous = -1
+        for point in points:
+            require(isinstance(point, dict) and set(point) == {'at_us', 'value'},
+                    'Keyframe requires at_us and value')
+            at = integer(point['at_us'], 'Keyframe time')
+            require(previous < at <= duration_us, 'Keyframes must be ordered inside the segment')
+            previous = at
+            low, high = (0, 4) if channel == 'volume' else (-5, 5)
+            number(point['value'], 'Keyframe value', low, high)
+        require(points[0]['at_us'] == 0, 'First keyframe must start at zero')
+        if channel in segment:
+            require(abs(points[0]['value'] - segment[channel]) < 1e-7,
+                    'Static value conflicts with first keyframe')
+
+
 def probe(path, executable):
     path = regular_file(path, 'Media')
     before = path.stat()
@@ -180,7 +209,7 @@ def validate_plan(plan, ffprobe):
             'The first track must be the main video track')
     assets, duration = {}, 0
     common = {'start_us', 'duration_us'}
-    media_fields = common | {'source', 'source_start_us', 'source_duration_us', 'speed', 'volume'}
+    media_fields = common | {'source', 'source_start_us', 'source_duration_us', 'speed', 'volume', 'keyframes'}
     video_fields = media_fields | {'scale', 'x', 'y'}
     text_fields = common | {'text', 'size', 'x', 'y', 'color', 'border_color', 'border_width'}
     for ti, track in enumerate(tracks):
@@ -220,6 +249,7 @@ def validate_plan(plan, ffprobe):
             require(source_start + source_duration <= asset['duration_us'] + 2,
                     'Source trim exceeds media duration')
             number(segment.get('volume', 1), 'volume', 0, 4)
+            validate_keyframes(segment, duration_us, source_start, speed, kind, ti)
             if kind == 'video':
                 number(segment.get('scale', 1), 'scale', .01, 10)
                 number(segment.get('x', 0), 'x', -5, 5)
@@ -274,14 +304,20 @@ def compile_timeline(plan, assets):
                         'id': material_id, 'path': asset['relative'], 'type': kind,
                         'has_audio': asset['has_audio'], 'sha256': asset['sha256'],
                         'width': asset['width'], 'height': asset['height']})
+                series = source_segment.get('keyframes', {})
+                volume_points = series.get('volume')
                 segment.update(material_id=media_ids[key],
                     source_timerange={'start': source_segment.get('source_start_us', 0),
                                       'duration': source_segment.get('source_duration_us',
                                                                      source_segment['duration_us'])},
-                    speed=source_segment.get('speed', 1), volume=source_segment.get('volume', 1))
+                    speed=source_segment.get('speed', 1),
+                    volume=volume_points[0]['value'] if volume_points else source_segment.get('volume', 1))
+                if series:
+                    segment['keyframes'] = series
                 if kind == 'video':
                     segment.update(scale=source_segment.get('scale', 1),
-                                   x=source_segment.get('x', 0), y=source_segment.get('y', 0))
+                                   x=series['x'][0]['value'] if 'x' in series else source_segment.get('x', 0),
+                                   y=series['y'][0]['value'] if 'y' in series else source_segment.get('y', 0))
             track['segments'].append(segment)
         tracks.append(track)
     duration = max(s['target_timerange']['start'] + s['target_timerange']['duration']
