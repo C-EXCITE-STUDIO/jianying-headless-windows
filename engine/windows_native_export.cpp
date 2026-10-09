@@ -50,7 +50,6 @@ static std::mutex log_mutex;
 static std::atomic<int> relevant_logs{0};
 static std::atomic<bool> restore_done{false};
 static std::atomic<bool> compile_done{false};
-static std::atomic<bool> compile_error{false};
 void native_log(const char*, const char* file, int line, const char*, int level,
                 const char* format, ...) {
   char buffer[4096]{};
@@ -65,8 +64,6 @@ void native_log(const char*, const char* file, int line, const char*, int level,
     restore_done = true;
   if (std::strstr(buffer, "export_callback: VE_INFO_COMPILE_DONE"))
     compile_done = true;
-  if (std::strstr(buffer, "compile_error_callback") ||
-      std::strstr(buffer, "VE_ERROR_COMPILE")) compile_error = true;
   if (relevant_logs.fetch_add(1) >= 120) return;
   std::lock_guard<std::mutex> guard(log_mutex);
   std::cerr << "engine_log level=" << level << " line=" << line << " file="
@@ -292,7 +289,10 @@ int wmain(int argc, wchar_t** argv) {
       invoke_sync(server, &export_base, &on_export, sid);
       std::cerr << "stage=export_invoked\n";
       auto until = std::chrono::steady_clock::now() + std::chrono::seconds(stage_timeout);
-      while (!compile_done && !compile_error && callback_code.load() == 0 &&
+      // The engine can report a compile error while switching from hardware
+      // decode to software decode. Keep pumping until its final completion,
+      // a nonzero response, or the bounded stage timeout.
+      while (!compile_done && callback_code.load() == 0 &&
              std::chrono::steady_clock::now() < until) {
         pump_once(server);
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
@@ -305,7 +305,7 @@ int wmain(int argc, wchar_t** argv) {
       std::cerr << "stage=export_waited bytes=" << size
                 << " callbacks=" << callback_count.load() << " callback_code=" << callback_code.load()
                 << " compile_done=" << bool(compile_done) << '\n';
-      if (!compile_done || compile_error || callback_code.load() != 0 || size == 0)
+      if (!compile_done || callback_code.load() != 0 || size == 0)
         throw std::runtime_error("native export did not complete");
       export_base.reset();
     }
@@ -334,6 +334,10 @@ int wmain(int argc, wchar_t** argv) {
     return 7;
   } catch (const std::exception& error) {
     std::cerr << "native project failed: " << error.what() << '\n';
+    // The vendor runtime can leave worker threads alive after export fails.
+    // End this isolated helper so its caller receives the failure promptly.
+    std::cerr.flush();
+    TerminateProcess(GetCurrentProcess(), 6);
     return 6;
   }
 }
