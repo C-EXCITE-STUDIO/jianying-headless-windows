@@ -35,6 +35,10 @@ collapse later audio. Sequential and overlapping text tracks form one connected
 filter chain. Native effects, filters, transitions, keyframes and editable
 Windows Jianying drafts are explicitly unsupported.
 
+For a single-frame PNG or JPEG, probing assigns the same three-hour source
+capacity used by Jianying photos. The build verifies that the file contains
+exactly one frame; the renderer loops that frame for the planned duration.
+
 Successful output retains render.mp4, result.json, the filter graph, FFprobe
 evidence and FFmpeg/full-decode logs. The result asserts duration, dimensions,
 frame rate, frame count, H.264/yuv420p output, complete decoding and an unchanged

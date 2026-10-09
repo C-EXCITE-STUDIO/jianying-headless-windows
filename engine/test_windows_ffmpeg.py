@@ -24,6 +24,17 @@ TEST_WORK.mkdir(parents=True, exist_ok=True)
 
 class WindowsFfmpegSemanticsTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which('ffmpeg') and shutil.which('ffprobe'), 'FFmpeg is required')
+    def test_single_png_has_still_source_capacity(self):
+        job = Path(tempfile.mkdtemp(prefix='png-probe-', dir=TEST_WORK))
+        source = job / 'still.png'
+        subprocess.run(['ffmpeg', '-v', 'error', '-f', 'lavfi', '-i',
+                        'color=c=red:s=32x32:d=0.1', '-frames:v', '1', str(source)],
+                       check=True, capture_output=True, timeout=30)
+        asset = portable.probe(source, 'ffprobe')
+        self.assertEqual(asset['kind'], 'video')
+        self.assertEqual(asset['duration_us'], 10_800_000_000)
+
+    @unittest.skipUnless(shutil.which('ffmpeg') and shutil.which('ffprobe'), 'FFmpeg is required')
     def test_public_ig_export_retains_requested_audio_gain(self):
         job = Path(tempfile.mkdtemp(prefix='ig-audio-', dir=TEST_WORK))
         source = ROOT / 'docs/media/hypit-original-preview.mp4'

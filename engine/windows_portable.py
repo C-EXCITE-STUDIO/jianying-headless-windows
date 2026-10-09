@@ -137,7 +137,21 @@ def probe(path, executable):
     require(len(videos) <= 1 and len(audios) <= 1 and (videos or audios),
             'Media must contain at most one video and one audio stream')
     stream = videos[0] if videos else audios[0]
-    duration = float(stream.get('duration') or value.get('format', {}).get('duration') or 0)
+    if videos and path.suffix.lower() in {'.png', '.jpg', '.jpeg'}:
+        require(stream.get('codec_name') in {'png', 'mjpeg'},
+                'Still image extension and codec disagree')
+        counted = subprocess.run(
+            [str(executable), '-v', 'error', '-count_frames', '-show_entries',
+             'stream=nb_read_frames', '-of', 'json', str(path)],
+            capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=60)
+        require(counted.returncode == 0, 'ffprobe frame count failed for ' + path.name)
+        frames = json.loads(counted.stdout).get('streams', [])
+        require(len(frames) == 1 and frames[0].get('nb_read_frames') == '1',
+                'A still image must contain exactly one frame')
+        # Jianying gives photos a three-hour source capacity; FFmpeg loops the frame.
+        duration = 10_800.0
+    else:
+        duration = float(stream.get('duration') or value.get('format', {}).get('duration') or 0)
     require(math.isfinite(duration) and duration > 0, 'Media duration is unavailable')
     after = path.stat()
     require((before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) ==
