@@ -127,11 +127,11 @@ def validate_keyframes(segment, duration_us, source_start, speed, kind, track_in
     if 'keyframes' not in segment:
         return
     series = segment['keyframes']
-    allowed = {'volume'} if kind == 'audio' else {'volume', 'x', 'y'}
+    allowed = {'volume'} if kind == 'audio' else {'volume', 'x', 'y', 'scale'}
     require(isinstance(series, dict) and series and not set(series) - allowed,
-            'Windows FFmpeg supports only volume and overlay position keyframes')
-    require(track_index != 0 or not ({'x', 'y'} & set(series)),
-            'Position keyframes on the main video track are not yet supported')
+            'Windows FFmpeg supports only volume and overlay transform keyframes')
+    require(track_index != 0 or not ({'x', 'y', 'scale'} & set(series)),
+            'Transform keyframes on the main video track are not yet supported')
     require(source_start == 0 and speed == 1,
             'Keyframes on trimmed or speed-adjusted sources need verified time mapping')
     for channel, points in series.items():
@@ -144,7 +144,8 @@ def validate_keyframes(segment, duration_us, source_start, speed, kind, track_in
             at = integer(point['at_us'], 'Keyframe time')
             require(previous < at <= duration_us, 'Keyframes must be ordered inside the segment')
             previous = at
-            low, high = (0, 4) if channel == 'volume' else (-5, 5)
+            low, high = ((0, 4) if channel == 'volume' else
+                         (.01, 10) if channel == 'scale' else (-5, 5))
             number(point['value'], 'Keyframe value', low, high)
         require(points[0]['at_us'] == 0, 'First keyframe must start at zero')
         if channel in segment:
@@ -315,7 +316,8 @@ def compile_timeline(plan, assets):
                 if series:
                     segment['keyframes'] = series
                 if kind == 'video':
-                    segment.update(scale=source_segment.get('scale', 1),
+                    segment.update(scale=series['scale'][0]['value'] if 'scale' in series else
+                                   source_segment.get('scale', 1),
                                    x=series['x'][0]['value'] if 'x' in series else source_segment.get('x', 0),
                                    y=series['y'][0]['value'] if 'y' in series else source_segment.get('y', 0))
             track['segments'].append(segment)

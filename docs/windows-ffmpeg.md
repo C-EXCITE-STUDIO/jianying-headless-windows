@@ -31,7 +31,7 @@ recorded by name, size and SHA-256.
 The renderer supports ordered video, overlay video, target-time gaps, cuts,
 speed, original audio, separate audio tracks, volume, still inputs and basic
 text. Linear volume keyframes are supported on audio tracks and video with
-audio. Linear X/Y position keyframes are supported on overlay video tracks.
+audio. Linear X/Y position and uniform scale keyframes are supported on overlay video tracks.
 Keyframed sources must start at zero and play at normal speed. Audio is placed
 on the absolute target timeline, so silent clips do not collapse later audio.
 Sequential and overlapping text tracks form one connected filter chain. Native

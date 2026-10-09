@@ -103,9 +103,14 @@ def build(timeline, work, font=None):
                           f'pad={width}:{height}:(ow-iw)/2:(oh-ih)/2,setsar=1')
                 x, y = '0', '0'
             else:
-                scale = float(segment.get('scale', 1))
-                chain += f',scale=iw*{scale:.6f}:ih*{scale:.6f},setsar=1'
                 series = segment.get('keyframes', {})
+                if 'scale' in series:
+                    factor = linear_expression(series['scale'])
+                    chain += (f",scale=w='iw*({factor})':h='ih*({factor})':"
+                              'eval=frame,setsar=1')
+                else:
+                    scale = float(segment.get('scale', 1))
+                    chain += f',scale=iw*{scale:.6f}:ih*{scale:.6f},setsar=1'
                 x_value = (linear_expression(series['x'], start) if 'x' in series else
                            f'{float(segment.get("x", 0)):.6f}')
                 y_value = (linear_expression(series['y'], start) if 'y' in series else
