@@ -104,6 +104,11 @@ def build(timeline, work, font=None):
                 x, y = '0', '0'
             else:
                 series = segment.get('keyframes', {})
+                # Jianying first fits an overlay source inside the canvas,
+                # then applies the clip scale. Match the editable draft's
+                # transform semantics for sources smaller than the canvas.
+                chain += (f',scale={width}:{height}:force_original_aspect_ratio=decrease,'
+                          'setsar=1')
                 if 'scale' in series:
                     factor = linear_expression(series['scale'])
                     chain += (f",scale=w='iw*({factor})':h='ih*({factor})':"

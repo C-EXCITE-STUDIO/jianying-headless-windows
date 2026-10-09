@@ -23,6 +23,26 @@ TEST_WORK.mkdir(parents=True, exist_ok=True)
 
 
 class WindowsFfmpegSemanticsTests(unittest.TestCase):
+    def test_overlay_scale_uses_canvas_fit_before_clip_scale(self):
+        source = ROOT / 'docs/media/hypit-original-preview.mp4'
+        timeline = {
+            'canvas_config': {'width': 320, 'height': 240}, 'fps': 30,
+            'duration': 1_000_000,
+            'materials': {'videos': [{'id': 'overlay', 'path': str(source), 'has_audio': False}]},
+            'tracks': [{'type': 'video', 'segments': [{
+                'material_id': 'overlay',
+                'source_timerange': {'start': 0, 'duration': 1_000_000},
+                'target_timerange': {'start': 0, 'duration': 1_000_000},
+                'scale': 1}]}, {'type': 'video', 'segments': [{
+                    'material_id': 'overlay',
+                    'source_timerange': {'start': 0, 'duration': 1_000_000},
+                    'target_timerange': {'start': 0, 'duration': 1_000_000},
+                    'scale': .5}]}],
+        }
+        _, graph, _, _, _ = ffmpeg_graph.build(timeline, ROOT)
+        self.assertIn('scale=320:240:force_original_aspect_ratio=decrease,setsar=1,'
+                      'scale=iw*0.500000:ih*0.500000', graph)
+
     @unittest.skipUnless(shutil.which('ffmpeg') and shutil.which('ffprobe'), 'FFmpeg is required')
     def test_single_png_has_still_source_capacity(self):
         job = Path(tempfile.mkdtemp(prefix='png-probe-', dir=TEST_WORK))

@@ -4,6 +4,8 @@ Windows uses an isolated FFmpeg renderer. It produces a verified MP4, not a
 Jianying-native editable draft, and never imports the macOS codec, registration,
 account or resource-cache modules.
 
+已安裝特定 Windows 剪映版本並有現成草稿時，可另用[實驗性原生引擎匯出](windows-native-export.md)。兩個入口的輸入與驗證範圍不同。
+
 ## Requirements
 
 - Python 3.9 or newer.
@@ -32,6 +34,7 @@ The renderer supports ordered video, overlay video, target-time gaps, cuts,
 speed, original audio, separate audio tracks, volume, still inputs and basic
 text. Linear volume keyframes are supported on audio tracks and video with
 audio. Linear X/Y position and uniform scale keyframes are supported on overlay video tracks.
+疊加素材先等比適配畫布，再套用片段 `scale`；這與原生草稿的縮放語意一致。舊版 Windows FFmpeg 輸出直接對來源像素套 `scale`，同一計畫重新輸出時，疊加素材的尺寸可能改變。
 Keyframed sources must start at zero and play at normal speed. Audio is placed
 on the absolute target timeline, so silent clips do not collapse later audio.
 Sequential and overlapping text tracks form one connected filter chain. Native

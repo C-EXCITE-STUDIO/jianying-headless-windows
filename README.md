@@ -38,6 +38,10 @@ Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与�
 
 该独立导出后端由 [@instantgoing](https://github.com/instantgoing) 在 [PR #1](https://github.com/mcncarl/jianying-headless/pull/1) 中贡献。
 
+## Windows 原生引擎匯出試驗
+
+本地 Windows 分支另提供 `engine/windows_native_export.py`：讀取現成的可編輯草稿，透過已安裝剪映 11.5.0.14471 的 `videoeditor.dll`，在隔離程序中原生匯出 MP4。這個入口已在一份含影片、圖片、文字與音訊的 3 秒草稿上，依草稿畫布輸出 1280×720、30 fps、90 幀 H.264/AAC，並完成完整解碼。工作區試驗腳本已能從同一份計畫建立草稿並選擇原生匯出；正式 Skill 命令尚未接入，也未驗證原專案所有功能。使用方式和精確版本限制見 [Windows 原生匯出說明](docs/windows-native-export.md)。
+
 ## Hypit 协作案例
 
 一个约 **50.23 秒**的 IG 滚动动画教程展示了从 Hypit 到剪映的工程交接。

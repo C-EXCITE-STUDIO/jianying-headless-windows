@@ -49,7 +49,7 @@ PINS = {
     'blueprint.json': '91f7eddad5bff9af23eb88b53713c180e3e3d4054edd469140cfa9aa56bc1dc9',
     'windows_portable.py': 'ce6c0566ed42a82922e4daa2db6b1d5828d2408ae1988525b1ea5bddb1f4c826',
     'windows_export.py': 'b4f20ce94b6ca0a72d5c542bc56ce9fd23a13a09826ba71a34beb99e23474fc8',
-    'ffmpeg_graph.py': '0c98ab7c3355ad2b4030533de3fa13cd81d2047555534333334404178565f31e',
+    'ffmpeg_graph.py': '559f8f7a4b5a38b8e0d936ca835e624576fbf8da300362d1faee09c4612c7aca',
     'ffmpeg_tools.py': 'c8d0817c57573e0e755f3277466fa13e08bdc588d90471344faaf30438e9992f',
 }
 
