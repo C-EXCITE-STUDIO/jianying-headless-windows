@@ -118,8 +118,6 @@ int wmain(int argc, wchar_t** argv) {
         const std::function<void(std::shared_ptr<lyra::RespStruct>)>*, long);
     using DraftTransaction = void (*)(void*, std::shared_ptr<lvve::Draft>*,
         const std::function<void(std::shared_ptr<lvve::Draft>)>*, long);
-    using Shutdown = void (*)(void*);
-    using CloseSession = void (*)(void*, long, const std::function<void()>*);
     using GetLogger = void* (*)();
     using SetAlog = void (*)(void*, decltype(&native_log), void (*)(char, char));
     using SetLogLevel = void (*)(void*, const std::string&);
@@ -145,9 +143,6 @@ int wmain(int argc, wchar_t** argv) {
         "?invokeSync@Server@lyra@@QEAAXV?$shared_ptr@UReqStruct@lyra@@@std@@AEBV?$function@$$A6AXV?$shared_ptr@URespStruct@lyra@@@std@@@Z@4@J@Z");
     auto draft_transaction = required<DraftTransaction>(dll,
         "?draftTransaction@Session@lyra@@QEAA?AV?$shared_ptr@VDraft@lvve@@@std@@AEBV?$function@$$A6AXV?$shared_ptr@VDraft@lvve@@@std@@@Z@4@J@Z");
-    auto shutdown = required<Shutdown>(dll, "?shutdown@Server@lyra@@QEAAXXZ");
-    auto close_session = required<CloseSession>(dll,
-        "?closeSession@Server@lyra@@QEAAXJV?$function@$$A6AXXZ@std@@@Z");
     auto get_logger = required<GetLogger>(dll, "?getLogger@Logger@lvve@@SAAEAV12@XZ");
     auto set_alog = required<SetAlog>(dll,
         "?setAlogFunction@Logger@lvve@@QEAAXP6AXPEBD0H0H0ZZP6AXDD@Z@Z");
@@ -307,30 +302,15 @@ int wmain(int argc, wchar_t** argv) {
                 << " compile_done=" << bool(compile_done) << '\n';
       if (!compile_done || callback_code.load() != 0 || size == 0)
         throw std::runtime_error("native export did not complete");
-      export_base.reset();
+      // A large restored timeline has exited with heap-corruption status
+      // during cleanup after VE_INFO_COMPILE_DONE. This helper
+      // owns a private process, and Python validates the MP4 after it exits.
+      // Exit here before C++ or vendor destructors run.
+      std::cerr << "stage=completed_process_exit\n";
+      std::cerr.flush();
+      TerminateProcess(GetCurrentProcess(), 0);
+      return 7;
     }
-    export_request.reset();
-    wrapper.reset(); session.reset();
-    bool response_ok = bool(response);
-    response.reset(); request.reset(); draft.reset();
-    std::atomic<bool> close_done{false};
-    std::function<void()> on_close = [&] { close_done = true; };
-    close_session(server, sid, &on_close);
-    auto close_until = std::chrono::steady_clock::now() + std::chrono::seconds(5);
-    while (!close_done && std::chrono::steady_clock::now() < close_until) {
-      pump_once(server);
-      std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    }
-    std::cerr << "stage=close_session result=" << close_done << '\n';
-    shutdown(server);
-    std::cerr << "stage=shutdown\n";
-    std::cerr << "stage=free_library_begin\n";
-    FreeLibrary(dll);
-    std::cerr << "stage=free_library_done\n";
-    // The vendor runtime has process-exit worker threads after a restored
-    // timeline. End only this isolated helper after native shutdown; the
-    // outer Python process independently checks the complete MP4.
-    TerminateProcess(GetCurrentProcess(), response_ok ? 0 : 5);
     return 7;
   } catch (const std::exception& error) {
     std::cerr << "native project failed: " << error.what() << '\n';

@@ -165,7 +165,9 @@ def export(draft_info: Path, job: Path, stage_timeout: int = 120) -> dict:
                          cwd=job, timeout=stage_timeout * 2 + 45,
                          log=job / "native-helper.log")
     if "stage=restore_done result=1" not in result.stderr or \
-            "compile_done=1" not in result.stderr or not movie.is_file():
+            "compile_done=1" not in result.stderr or \
+            "stage=completed_process_exit" not in result.stderr or \
+            not movie.is_file():
         raise RuntimeError("缺少草稿還原或原生編譯完成證據")
     media = validate_mp4(movie, job, stage_timeout * 2 + 45, expected)
     if digest(draft_info) != input_hash:
