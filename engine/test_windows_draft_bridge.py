@@ -59,5 +59,70 @@ class StillImageTests(unittest.TestCase):
         self.assertEqual(file_sha256(copied), file_sha256(self.source))
 
 
+class TextMotionTests(unittest.TestCase):
+    def setUp(self):
+        StillImageTests.setUp(self)
+        self.plan["name"] = "text_motion_test"
+        self.text = {
+            "text": "可編輯動態文字", "start_us": 0, "duration_us": 2_000_000,
+            "x": -.25, "y": -.6, "scale": .8, "rotation": -10,
+            "opacity": .4,
+            "keyframes": {
+                "x": [{"at_us": 0, "value": -.25}, {"at_us": 2_000_000, "value": .3}],
+                "y": [{"at_us": 0, "value": -.6}, {"at_us": 2_000_000, "value": .4}],
+                "scale": [{"at_us": 0, "value": .8}, {"at_us": 2_000_000, "value": 1.5}],
+                "rotation": [{"at_us": 0, "value": -10}, {"at_us": 2_000_000, "value": 25}],
+            },
+        }
+        self.plan["tracks"].append({"type": "text", "name": "字幕", "segments": [self.text]})
+
+    def test_static_opacity_and_all_text_motion_channels_are_saved(self):
+        validate(self.plan)
+        draft_info = create(self.plan, self.root, None, None)
+        saved = json.loads(draft_info.read_text(encoding="utf-8"))
+        self.assertEqual(len(saved["materials"]["texts"]), 1)
+        text_material = saved["materials"]["texts"][0]
+        self.assertEqual(json.loads(text_material["content"])["text"], self.text["text"])
+        self.assertEqual(text_material["global_alpha"], .4)
+        self.assertEqual(json.loads(text_material["content"])["styles"][0]["fill"]["alpha"], 1)
+        segment = saved["tracks"][1]["segments"][0]
+        self.assertEqual(segment["clip"]["alpha"], 1)
+        self.assertEqual(segment["clip"]["transform"], {"x": -.25, "y": -.6})
+        self.assertEqual(segment["clip"]["scale"], {"x": .8, "y": .8})
+        self.assertEqual(segment["clip"]["rotation"], -10)
+        self.assertTrue(segment["uniform_scale"]["on"])
+        expected_types = {"x": "KFTypePositionX", "y": "KFTypePositionY",
+                          "scale": "KFTypeScaleX", "rotation": "KFTypeRotation"}
+        groups = {group["property_type"]: group for group in segment["common_keyframes"]}
+        self.assertEqual(set(groups), set(expected_types.values()))
+        for channel, property_type in expected_types.items():
+            points = groups[property_type]["keyframe_list"]
+            self.assertEqual([point["time_offset"] for point in points], [0, 2_000_000])
+            self.assertEqual([point["values"][0] for point in points],
+                             [point["value"] for point in self.text["keyframes"][channel]])
+            self.assertTrue(all(point["curveType"] == "Line" for point in points))
+
+    def test_text_motion_rejects_invalid_channels_times_values_and_conflicts(self):
+        import copy
+
+        cases = (
+            (lambda text: text["keyframes"].update({"opacity": [
+                {"at_us": 0, "value": .4}, {"at_us": 2_000_000, "value": .7}]}), "只支援"),
+            (lambda text: text["keyframes"]["x"][1].update(at_us=0), "遞增"),
+            (lambda text: text["keyframes"]["x"][0].update(at_us=1), "從 0 開始"),
+            (lambda text: text["keyframes"]["y"][1].update(at_us=2_000_001), "片段內"),
+            (lambda text: text["keyframes"]["scale"][1].update(value=11), "超出允許範圍"),
+            (lambda text: text["keyframes"]["rotation"][1].update(value=float("nan")), "有限數字"),
+            (lambda text: text.update(x=0), "不一致"),
+            (lambda text: text.update(opacity=1.2), "超出允許範圍"),
+        )
+        for mutate, error in cases:
+            with self.subTest(error=error, mutate=mutate):
+                plan = copy.deepcopy(self.plan)
+                mutate(plan["tracks"][1]["segments"][0])
+                with self.assertRaisesRegex(PlanError, error):
+                    validate(plan)
+
+
 if __name__ == "__main__":
     unittest.main()

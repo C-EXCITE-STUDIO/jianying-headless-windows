@@ -57,6 +57,10 @@ def preflight(plan: dict[str, Any], output: Path, draft_root: Path,
         raise PlanError(f"不支援的匯出後端：{backend}")
     if backend == "windows-ffmpeg" and any("font" in segment for segment in text_segments):
         raise PlanError("windows-ffmpeg 暫不支援每段不同字體；請用 windows-native")
+    if backend == "windows-ffmpeg" and any(
+            {"scale", "rotation", "opacity", "keyframes"} & set(segment)
+            for segment in text_segments):
+        raise PlanError("windows-ffmpeg 暫不支援文字縮放、旋轉、透明度或關鍵影格；請用 windows-native")
     media_files = [Path(segment["source"]) for track in plan["tracks"]
                    if track["type"] in {"video", "audio"}
                    for segment in track["segments"]]
@@ -76,7 +80,8 @@ def preflight(plan: dict[str, Any], output: Path, draft_root: Path,
         for track in probe_plan["tracks"]:
             if track["type"] == "text":
                 for segment in track["segments"]:
-                    segment.pop("font", None)
+                    for field in ("font", "scale", "rotation", "opacity", "keyframes"):
+                        segment.pop(field, None)
             if track["type"] == "video":
                 for segment in track["segments"]:
                     segment.pop("rotation", None)

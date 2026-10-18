@@ -29,7 +29,7 @@ AUDIO_KEYS = {
 }
 TEXT_KEYS = {
     "text", "start_us", "duration_us", "size", "x", "y", "scale", "rotation",
-    "color", "border_color", "border_width", "font",
+    "color", "border_color", "border_width", "font", "opacity", "keyframes",
 }
 INVALID_NAME = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
@@ -114,7 +114,9 @@ def validate_keyframes(seg: dict[str, Any], where: str, length: int,
     if "keyframes" not in seg:
         return
     series = seg["keyframes"]
-    allowed = {"volume"} if kind == "audio" else {"volume", "x", "y", "scale", "rotation", "opacity"}
+    allowed = ({"volume"} if kind == "audio" else
+               {"x", "y", "scale", "rotation"} if kind == "text" else
+               {"volume", "x", "y", "scale", "rotation", "opacity"})
     if not isinstance(series, dict) or not series or set(series) - allowed:
         raise PlanError(f"{where}.keyframes 目前只支援 {', '.join(sorted(allowed))}")
     if source_start != 0 or speed != 1:
@@ -235,9 +237,12 @@ def validate(plan: Any) -> dict[str, Any]:
                         raise PlanError(f"字體不存在、格式不支援或是符號連結：{path}")
                     fonts.add(str(path.resolve()))
                 number(seg.get("size", 6), f"{loc}.size", 1, 100)
-                for key in ("x", "y", "rotation"):
-                    number(seg.get(key, 0), f"{loc}.{key}")
-                number(seg.get("scale", 1), f"{loc}.scale", .01)
+                for key in ("x", "y"):
+                    number(seg.get(key, 0), f"{loc}.{key}", -5, 5)
+                number(seg.get("rotation", 0), f"{loc}.rotation", -360, 360)
+                number(seg.get("scale", 1), f"{loc}.scale", .01, 10)
+                number(seg.get("opacity", 1), f"{loc}.opacity", 0, 1)
+                validate_keyframes(seg, loc, length, 0, 1, kind)
                 color(seg.get("color", "#FFFFFF"), f"{loc}.color")
                 if "border_color" in seg:
                     color(seg["border_color"], f"{loc}.border_color")
@@ -318,7 +323,9 @@ def create(plan: dict[str, Any], root: Path, user_data: Optional[Path],
                                     "opacity": jy.KeyframeProperty.alpha}[channel]
                             segment.add_keyframe(prop, point["at_us"], point["value"])
             else:
-                scale = item.get("scale", 1)
+                keyframes = item.get("keyframes", {})
+                scale = (keyframes["scale"][0]["value"] if "scale" in keyframes
+                         else item.get("scale", 1))
                 border = None
                 if item.get("border_width", .05) > 0:
                     border = jy.TextBorder(
@@ -330,9 +337,21 @@ def create(plan: dict[str, Any], root: Path, user_data: Optional[Path],
                     style=jy.TextStyle(size=item.get("size", 6),
                                        color=color(item.get("color", "#FFFFFF"), "color")),
                     clip_settings=jy.ClipSettings(
-                        rotation=item.get("rotation", 0), scale_x=scale, scale_y=scale,
-                        transform_x=item.get("x", 0), transform_y=item.get("y", -.78)),
+                        rotation=(keyframes["rotation"][0]["value"] if "rotation" in keyframes
+                                  else item.get("rotation", 0)),
+                        scale_x=scale, scale_y=scale,
+                        transform_x=(keyframes["x"][0]["value"] if "x" in keyframes
+                                     else item.get("x", 0)),
+                        transform_y=(keyframes["y"][0]["value"] if "y" in keyframes
+                                     else item.get("y", -.78))),
                     border=border)
+                for channel, series in keyframes.items():
+                    prop = {"x": jy.KeyframeProperty.position_x,
+                            "y": jy.KeyframeProperty.position_y,
+                            "scale": jy.KeyframeProperty.uniform_scale,
+                            "rotation": jy.KeyframeProperty.rotation}[channel]
+                    for point in series:
+                        segment.add_keyframe(prop, point["at_us"], point["value"])
             script.add_segment(segment, name)
     with registration_scope(user_data):
         script.save(inline_materials=True)
@@ -342,6 +361,27 @@ def create(plan: dict[str, Any], root: Path, user_data: Optional[Path],
     saved = json.loads(result.read_text(encoding="utf-8"))
     if len(saved.get("tracks", [])) != len(plan["tracks"]):
         raise PlanError("保存後軌道數量不符")
+    text_materials = {material["id"]: material
+                      for material in saved.get("materials", {}).get("texts", [])}
+    text_opacity_changed = False
+    for plan_track, saved_track in zip(plan["tracks"], saved["tracks"]):
+        if plan_track["type"] != "text":
+            continue
+        if len(plan_track["segments"]) != len(saved_track.get("segments", [])):
+            raise PlanError("保存後文字片段數量不符")
+        for item, saved_segment in zip(plan_track["segments"], saved_track["segments"]):
+            material = text_materials.get(saved_segment.get("material_id"))
+            if material is None:
+                raise PlanError("保存後文字素材參照遺失")
+            desired_alpha = item.get("opacity", 1)
+            if material.get("global_alpha") != desired_alpha:
+                # 剪映 11.5.0 的文字透明度由 global_alpha 生效。TextStyle.alpha
+                # 同時改寫三個相乘的欄位，會使 0.25 顯示為約 0.016。
+                material["global_alpha"] = desired_alpha
+                text_opacity_changed = True
+    if text_opacity_changed:
+        result.write_text(json.dumps(saved, ensure_ascii=False, separators=(",", ":")) + "\n",
+                          encoding="utf-8")
     copied_hashes: set[str] = set()
     for bucket in ("videos", "audios", "images"):
         for material in saved.get("materials", {}).get(bucket, []):
