@@ -51,6 +51,11 @@ PINS = {
     'windows_export.py': 'b4f20ce94b6ca0a72d5c542bc56ce9fd23a13a09826ba71a34beb99e23474fc8',
     'ffmpeg_graph.py': '559f8f7a4b5a38b8e0d936ca835e624576fbf8da300362d1faee09c4612c7aca',
     'ffmpeg_tools.py': 'c8d0817c57573e0e755f3277466fa13e08bdc588d90471344faaf30438e9992f',
+    'windows_draft_bridge.py': '2ce0793812e146d5855c858fd7b067b967a5a4c5dc3548c405a123e6caab7ea8',
+    'windows_draft_install.py': '69807812688ba8cf2b3416a9ef74f8c4bfdaacb9a6307ebc1cf242b703544984',
+    'windows_dual_workflow.py': 'e17c8296076111d004554be9e61fb2b9e3fa12aa9a85e36ff929b8b202ba1d04',
+    'windows_native_export.py': '6f41a5f03d9765cc64b4469dc1698f7eab304404b4f966bb6265f132a7d4fef6',
+    'windows_native_export.cpp': 'fbdf626d66f1b98b12006fbfa9bdba547a46b6e7b6f86cd259c27f7a835983f4',
 }
 
 for name, expected in PINS.items():
@@ -74,11 +79,28 @@ elif command == 'export':
             raise SystemExit('--backend needs a value')
         requested = sys.argv[index + 1]
         del sys.argv[index:index + 2]
-    if requested not in {None, 'native', 'windows-ffmpeg'}:
+    if requested not in {None, 'native', 'windows-ffmpeg', 'windows-native'}:
         raise SystemExit('Unsupported export backend: ' + requested)
-    entrypoint = ('windows_export.py'
-                  if requested == 'windows-ffmpeg' or (requested is None and os.name == 'nt')
-                  else 'native_export.py')
+    if requested == 'windows-native':
+        if os.name != 'nt':
+            raise SystemExit('windows-native export requires Windows')
+        entrypoint = 'windows_native_export.py'
+    elif requested == 'native':
+        if os.name == 'nt':
+            raise SystemExit('Use --backend windows-native for Windows Jianying native export')
+        entrypoint = 'native_export.py'
+    else:
+        entrypoint = ('windows_export.py'
+                      if requested == 'windows-ffmpeg' or (requested is None and os.name == 'nt')
+                      else 'native_export.py')
+    del sys.argv[1]
+elif command in {'windows-draft', 'windows-install', 'windows-workflow', 'windows-native-export'}:
+    if os.name != 'nt':
+        raise SystemExit(command + ' requires Windows')
+    entrypoint = {'windows-draft': 'windows_draft_bridge.py',
+                  'windows-install': 'windows_draft_install.py',
+                  'windows-workflow': 'windows_dual_workflow.py',
+                  'windows-native-export': 'windows_native_export.py'}[command]
     del sys.argv[1]
 elif os.name == 'nt':
     if command not in {None, '--help', '-h', 'doctor', 'build', 'verify-build'}:
