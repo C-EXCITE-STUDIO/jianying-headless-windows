@@ -7,7 +7,7 @@ Windows 正式入口可從 `jy14-headless-plan/v1` 建立可編輯草稿、複�
 - 本機已驗證：Windows 11、64 位元 Python 3.13.2、剪映專業版 `11.5.0.14471`。`videoeditor.dll` 的 SHA-256 必須為 `37cadef37daff82e2ecdcd65080b9cbd7f6f9436f5e56c1ffb90c52c408eb7fb`。工具拒絕其他二進位版本。
 - 依 [固定依賴安裝](windows-setup.md)重建 pyJianYingDraft 基線與兩個本機修補檔；另需 MSVC C++ Build Tools、`ffmpeg` 和 `ffprobe`。
 - 正式 `windows-workflow` 已驗證從新草稿到安裝、原生 MP4 及完整解碼。搬移草稿後重新原生輸出曾取得 90/90 幀；23 軌、154 片段的 30 秒本機案例曾輸出 900/900 幀。
-- 文字 X/Y、縮放、旋轉線性關鍵影格與靜態透明度已在六章、12 秒原生成片中作影格量測；360/360 幀完整解碼。這份最新草稿尚未在剪映介面手動開啟。較早的多軌、素材、字體案例已由使用者確認開啟、播放、保存與重開。
+- 文字 X/Y、縮放、旋轉線性關鍵影格與靜態透明度已在六章、12 秒原生成片中作影格量測；360/360 幀完整解碼。同一六章草稿的編輯副本已由使用者確認剪映介面播放、聲音、修改後文字、保存與重開正常。較早的多軌、素材、字體案例亦已通過使用者介面驗收。
 
 已驗證樣本與其他版本、不同素材和更長工程是不同範圍；詳見 [功能對等清單](Windows功能對等清單.md)。
 
@@ -53,7 +53,7 @@ $DraftRoot = 'D:\Program Files\JianyingPro Drafts'
 & $Py $Entry windows-edit --source 'C:\path\to\draft' --target 'C:\work\new-draft-copy' --operations 'C:\work\operations.json' --workspace 'C:\work' --write
 ```
 
-第一行只檢查，第二行才建立新副本。還支援 `rename_track` 和 `set_segment` 對受支援類型的靜態音量／位置修改；未知操作、效果、加密草稿、含關鍵影格片段的靜態修改及既有目標均拒絕。副本建立時核對原件雜湊、重新綁定副本素材路徑並回讀。副本可再用 `windows-native-export --draft-info` 輸出，但介面保存與重開仍需人工驗收。
+第一行只檢查，第二行才建立新副本。還支援 `rename_track` 和 `set_segment` 對受支援類型的靜態音量／位置修改；未知操作、效果、加密草稿、含關鍵影格片段的靜態修改及既有目標均拒絕。副本建立時核對原件雜湊、重新綁定副本素材路徑並回讀。副本可再用 `windows-native-export --draft-info` 輸出；六章編輯副本已通過介面保存與重開，但其他副本仍須逐份驗收。
 
 ## 與 FFmpeg 輸出的區別
 

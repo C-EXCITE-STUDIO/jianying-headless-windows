@@ -29,7 +29,7 @@
 
 Windows 本機版已納入正式命令：`doctor`、`windows-draft`、`windows-install`、`windows-workflow`、`windows-native-export`，以及現有草稿的 `windows-inspect`／`windows-edit`。`windows-workflow` 可從同一份計畫建立可編輯草稿並用剪映 `videoeditor.dll` 輸出 H.264/AAC MP4；預設只檢查，`--write` 才實際執行。固定環境為 Windows 11、剪映 `11.5.0.14471`、64 位元 Python 3.13.2，並需精確 DLL SHA-256、MSVC、FFmpeg 與已修補的 pyJianYingDraft。見 [Windows 安裝](docs/windows-setup.md)、[原生輸出](docs/windows-native-export.md)及[功能對等清單](docs/Windows功能對等清單.md)。
 
-功能驗證有不同層級：原生成片完整解碼、畫面抽樣，以及剪映介面中的開啟／保存／重開。這些證據僅對已測樣本有效；文字動態功能的最新六章草稿尚未做介面手動驗收。剪映保存後的加密草稿可唯讀檢查，目前不可由 Windows 副本編輯器修改。
+功能驗證有不同層級：原生成片完整解碼、畫面抽樣，以及剪映介面中的開啟／保存／重開。六章文字動態草稿的編輯副本已由使用者確認播放、聲音、修改後文字、保存及重開正常；這些證據僅對已測樣本有效。剪映保存後的加密草稿可唯讀檢查，目前不可由 Windows 副本編輯器修改。
 
 ## Windows 可選 FFmpeg MP4 輸出
 
