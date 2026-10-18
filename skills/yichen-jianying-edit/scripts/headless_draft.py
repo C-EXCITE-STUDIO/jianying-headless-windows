@@ -55,6 +55,7 @@ PINS = {
     'windows_draft_install.py': '69807812688ba8cf2b3416a9ef74f8c4bfdaacb9a6307ebc1cf242b703544984',
     'windows_dual_workflow.py': '7e1b5ba38e8ffd956dd844b1a37743c726889d9de4f1473b0b0cd1823b9977ff',
     'windows_doctor.py': 'a64fcd3e31aa83dc44e096ab3ec0e0ab10133a5f686e0dfaa64b239404280c52',
+    'windows_existing_draft.py': '474e7d7ab43c55d966c29384c35e66d7665d053ee550c57a0c870ecd20ff9187',
     'windows_native_export.py': '6f41a5f03d9765cc64b4469dc1698f7eab304404b4f966bb6265f132a7d4fef6',
     'windows_native_export.cpp': 'fbdf626d66f1b98b12006fbfa9bdba547a46b6e7b6f86cd259c27f7a835983f4',
 }
@@ -69,9 +70,16 @@ entrypoint = 'jy14_headless.py'
 command = sys.argv[1] if len(sys.argv) > 1 else None
 if command == 'edit':
     if os.name == 'nt':
-        raise SystemExit('Native Jianying draft editing is macOS-only')
-    entrypoint = 'native_edit.py'
-    del sys.argv[1]
+        entrypoint = 'windows_existing_draft.py'
+    else:
+        entrypoint = 'native_edit.py'
+        del sys.argv[1]
+elif command in {'inspect', 'windows-inspect', 'windows-edit'}:
+    if os.name != 'nt':
+        raise SystemExit(command + ' requires Windows')
+    entrypoint = 'windows_existing_draft.py'
+    if command.startswith('windows-'):
+        sys.argv[1] = command.removeprefix('windows-')
 elif command == 'export':
     requested = None
     if '--backend' in sys.argv:
