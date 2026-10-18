@@ -1,13 +1,10 @@
 # Jianying Headless
 
-面向剪映专业版 macOS 的本地自动化工具。通过结构化剪辑计划生成可编辑草稿，
-在独立副本中修改多轨工程，并调用本机剪映引擎导出 MP4。
+面向剪映專業版 macOS 與固定版本 Windows 的本機自動化工具。透過結構化剪輯計畫產生可編輯草稿，並呼叫本機剪映引擎輸出 MP4。
 
-**主要适配版本：11.5.0 · 兼容版本：11.4.2**
+**macOS：主要適配 11.5.0、相容 11.4.2；Windows：僅驗證 11.5.0.14471 的精確二進位版本。**
 
-**首次使用请从 [从零生成第一个剪映草稿](docs/GETTING-STARTED.md) 开始。**
-教程包含安装前提、环境检查、拖入自己的视频、首页登记、保存重开和常见报错处理。
-11.5.0 仍需匹配具体安装身份与工具链，尚不保证任意电脑安装即用。
+首次使用：Windows 請讀 [Windows 安裝與快速開始](docs/windows-setup.md)，macOS 請讀 [macOS 從零開始](docs/GETTING-STARTED.md)。兩個平台都需匹配精確的本機剪映版本與工具鏈；目前不保證任意電腦安裝即用。
 
 项目适用于 AI 视频工作流的工程交接、批量草稿生成和 Agent 辅助剪辑。
 提供 Python 命令行入口及配套 Agent Skill。它不是剪映官方 SDK，运行时需要安装匹配版本的剪映。
@@ -18,29 +15,29 @@
 | --- | --- |
 | 生成可编辑草稿 | 视频分段、多轨组合、变速、音量、画中画、字幕和标题 |
 | 导入本地素材 | 视频、PNG、JPEG、GIF、配音、音乐和音效 |
-| 本地字体 | 新建文字或在副本中换字体，静态 OTF/TTF 随草稿保存；详见[字体说明](docs/LOCAL-FONTS.md) |
-| 基础动画 | 位置、缩放、旋转、透明度和音量的线性关键帧 |
-| 原生效果 | 六类静态几何蒙版、叠化转场、轻微抖动；需要匹配的本机资源与使用权限 |
-| 编辑已有工程 | 检查源草稿，在独立副本中修改，不覆盖原项目 |
+| 本地字體 | macOS 可新建文字或在副本中換字體；Windows 原生流程支援每段指定 TTF／TTC／OTF，副本編輯暫不支援換字體；macOS 詳見[字體說明](docs/LOCAL-FONTS.md) |
+| 基礎動畫 | macOS 與 Windows 原生流程支援受驗證通道的線性關鍵影格；Windows FFmpeg 僅支援其文件列出的子集 |
+| 原生效果 | macOS：六類靜態幾何蒙版、疊化轉場、輕微抖動；Windows 暫不支援這三項效果 |
+| 編輯已有工程 | macOS：多軌草稿副本編輯；Windows：唯讀檢查現有草稿，僅支援本工具新建、尚未經剪映介面保存的草稿作安全副本編輯 |
 | 原生视频导出 | 通过本机剪映引擎将已验证快照导出为 H.264/AAC MP4 |
 | 环境与工程检查 | 核对运行版本、组件身份、素材完整性和草稿保存结果 |
 
 核心流程为：**素材与剪辑计划 → 可编辑剪映草稿 → 原生引擎导出**。
 剪映中后续手工修改的内容不会自动同步回原计划或旧导出快照。
 
-## Windows 可选 MP4 导出
+## Windows 可編輯草稿與原生 MP4
 
-Windows 另提供独立的 FFmpeg 路径：从剪辑计划生成已校验的渲染快照，
-再输出 MP4。它**不需要安装剪映，也不生成可在剪映中编辑的草稿**；
-只支持已说明的视频、音频和基础文字能力，不等同于上方的 macOS 原生流程。
+Windows 本機版已納入正式命令：`doctor`、`windows-draft`、`windows-install`、`windows-workflow`、`windows-native-export`，以及現有草稿的 `windows-inspect`／`windows-edit`。`windows-workflow` 可從同一份計畫建立可編輯草稿並用剪映 `videoeditor.dll` 輸出 H.264/AAC MP4；預設只檢查，`--write` 才實際執行。固定環境為 Windows 11、剪映 `11.5.0.14471`、64 位元 Python 3.13.2，並需精確 DLL SHA-256、MSVC、FFmpeg 與已修補的 pyJianYingDraft。見 [Windows 安裝](docs/windows-setup.md)、[原生輸出](docs/windows-native-export.md)及[功能對等清單](docs/Windows功能對等清單.md)。
+
+功能驗證有不同層級：原生成片完整解碼、畫面抽樣，以及剪映介面中的開啟／保存／重開。這些證據僅對已測樣本有效；文字動態功能的最新六章草稿尚未做介面手動驗收。剪映保存後的加密草稿可唯讀檢查，目前不可由 Windows 副本編輯器修改。
+
+## Windows 可選 FFmpeg MP4 輸出
+
+Windows 另提供獨立 FFmpeg 路徑：從剪輯計畫生成已校驗的渲染快照，再輸出 MP4。直接使用 `build`／`export --backend windows-ffmpeg` 時**不需安裝剪映，也不產生可編輯草稿**；支援面小於 Windows 原生路徑。`windows-workflow --backend windows-ffmpeg` 則會另外建立並安裝草稿，但 MP4 仍由 FFmpeg 渲染。
 Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与音量；
 使用方法和限制见 [Windows FFmpeg 导出](docs/windows-ffmpeg.md)。
 
 该独立导出后端由 [@instantgoing](https://github.com/instantgoing) 在 [PR #1](https://github.com/mcncarl/jianying-headless/pull/1) 中贡献。
-
-## Windows 原生引擎匯出試驗
-
-本地 Windows 分支另提供 `engine/windows_native_export.py`：讀取現成的可編輯草稿，透過已安裝剪映 11.5.0.14471 的 `videoeditor.dll`，在隔離程序中原生匯出 MP4。這個入口已在一份含影片、圖片、文字與音訊的 3 秒草稿上，依草稿畫布輸出 1280×720、30 fps、90 幀 H.264/AAC，並完成完整解碼。工作區試驗腳本已能從同一份計畫建立草稿並選擇原生匯出；正式 Skill 命令尚未接入，也未驗證原專案所有功能。使用方式和精確版本限制見 [Windows 原生匯出說明](docs/windows-native-export.md)。
 
 ## Hypit 协作案例
 
@@ -71,7 +68,7 @@ Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与�
 详见 [Hypit 协作案例](docs/HYPIT-COLLABORATION.md) 和 [媒体说明](docs/media/README.md)。
 当前转换是单向、按项目实现；不提供任意 Hypit 工程的一键无损转换或双向同步。
 
-## 运行环境
+## macOS 執行環境
 
 - Apple Silicon Mac，macOS 26.0+；已验证环境为 macOS 26.5.1。
 - 剪映专业版 11.5.0，或兼容配置对应的 11.4.2。
@@ -85,7 +82,7 @@ Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与�
 构建工具选择、安装诊断、登记恢复及字体支持的进展和待验限制见
 [Issue 修复进展](docs/ISSUE-REMEDIATION.md)。环境检查通过不等于任意电脑兼容。
 
-## 快速开始
+## macOS 快速開始
 
 ```bash
 git clone https://github.com/mcncarl/jianying-headless.git
@@ -148,6 +145,7 @@ Skill 另收录于 [yichen-skills](https://github.com/mcncarl/yichen-skills/tree
 - 不支持任意剪映版本、任意效果组合、在线模板、资源下载、云端工程或账号权益获取。
 - 高清黑白滤镜与橙色描边花字已退出支持范围；含这些效果的计划或旧快照会明确报错。
 - 工程结构检查、原生播放、视觉一致性、主观听感与素材许可是不同的验收项目。
+- Windows 固定版本的支援狀態另見 [Windows 功能對等清單](docs/Windows功能對等清單.md)；蒙版、疊化及輕微抖動仍未支援，剪映保存後的加密草稿不能由目前的 Windows 編輯命令修改。
 
 详细结果及已知问题见 [验证状态](docs/VERIFICATION.md)。
 

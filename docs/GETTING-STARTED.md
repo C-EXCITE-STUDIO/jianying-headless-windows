@@ -1,4 +1,6 @@
-# 从零开始：用自己的视频生成第一个剪映草稿
+# macOS 從零開始：用自己的影片產生第一個剪映草稿
+
+本頁是 Apple Silicon macOS 流程。Windows 請使用 [Windows 安裝與快速開始](windows-setup.md)，其固定版本流程已能建立可編輯草稿並由剪映原生引擎輸出 MP4。
 
 目标：用一段本地视频的前 **2 秒**，生成带有一条可编辑文字的剪映草稿。先完成这个最小流程，再尝试多轨、转场或 Agent 自动剪辑。
 
@@ -10,7 +12,7 @@
 
 | 项目 | 要求 |
 | --- | --- |
-| 电脑 | Apple Silicon Mac，例如 M 系列芯片；不支持 Windows、Intel Mac 或 Rosetta 终端 |
+| 电脑 | 本頁只適用 Apple Silicon Mac，例如 M 系列晶片；Windows 使用上方獨立教學，Intel Mac 或 Rosetta 終端不適用 |
 | 系统 | macOS 26.0 或以上 |
 | 剪映 | 国内版剪映专业版 11.5.0；11.4.2 有兼容配置，CapCut 国际版不适用 |
 | 安装位置 | `/Applications/VideoFusion-macOS.app` |

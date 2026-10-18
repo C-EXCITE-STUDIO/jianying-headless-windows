@@ -1,0 +1,15 @@
+{
+  "schema": "jy14-headless-plan/v1",
+  "name": "Windows_Quickstart_Replace_Name",
+  "canvas": {"width": 640, "height": 360, "fps": 30},
+  "tracks": [
+    {"type": "video", "name": "主畫面", "segments": [
+      {"source": "C:/replace/with/sample.mp4", "start_us": 0, "duration_us": 3000000,
+       "source_start_us": 0, "source_duration_us": 3000000, "speed": 1, "volume": 1}
+    ]},
+    {"type": "text", "name": "可編輯標題", "segments": [
+      {"text": "Windows native draft", "start_us": 0, "duration_us": 3000000,
+       "size": 6, "x": 0, "y": -0.75, "color": "#FFFFFF", "border_color": "#000000", "border_width": 0.05}
+    ]}
+  ]
+}

@@ -1,30 +1,66 @@
-# Windows 剪映原生引擎匯出
+# Windows 剪映原生草稿與 MP4 輸出
 
-此實驗入口讀取**現成的** `draft_info.json`，在獨立程序中載入本機剪映 `videoeditor.dll`，還原時間軸並呼叫 `ExportService/exportStart`。輸出由剪映原生引擎產生；FFmpeg 只在完成後檢查媒體與完整解碼。
+Windows 正式入口可從 `jy14-headless-plan/v1` 建立可編輯草稿、複製到本機剪映草稿目錄，並透過已安裝剪映的 `videoeditor.dll` 輸出 H.264/AAC MP4。FFmpeg 在原生輸出後只負責媒體資訊與完整解碼檢查。從頭安裝及建立第一份作品，請依照 [Windows 安裝與快速開始](windows-setup.md)。
 
-## 已驗證範圍
+## 固定環境與已驗證結果
 
-- 本機剪映專業版 `11.5.0.14471`，`videoeditor.dll` SHA-256：`37cadef37daff82e2ecdcd65080b9cbd7f6f9436f5e56c1ffb90c52c408eb7fb`。工具只接受這個精確二進位版本。
-- 一份 3 秒測試草稿含影片、圖片、文字及音訊。原生輸出已按草稿畫布設定為 1280×720、30 fps、90 幀 H.264 與 AAC，完整解碼通過；抽樣畫面可見草稿內容，音訊非靜音。
-- 匯出後核對草稿要求的畫布、影格率、影格數、影像時長及明確音訊軌；不符時停止並保留診斷資料，不把 MP4 標為成功。最初測試曾因引擎預設設定產生 1080×1920，這項檢查及顯式設定已修正該問題。
-- 還原完成、`VE_INFO_COMPILE_DONE`、會話關閉及引擎關閉皆留在 `native-helper.log`；輸出與來源雜湊、媒體資訊寫入 `evidence.json`。
+- 本機已驗證：Windows 11、64 位元 Python 3.13.2、剪映專業版 `11.5.0.14471`。`videoeditor.dll` 的 SHA-256 必須為 `37cadef37daff82e2ecdcd65080b9cbd7f6f9436f5e56c1ffb90c52c408eb7fb`。工具拒絕其他二進位版本。
+- 依 [固定依賴安裝](windows-setup.md)重建 pyJianYingDraft 基線與兩個本機修補檔；另需 MSVC C++ Build Tools、`ffmpeg` 和 `ffprobe`。
+- 正式 `windows-workflow` 已驗證從新草稿到安裝、原生 MP4 及完整解碼。搬移草稿後重新原生輸出曾取得 90/90 幀；23 軌、154 片段的 30 秒本機案例曾輸出 900/900 幀。
+- 文字 X/Y、縮放、旋轉線性關鍵影格與靜態透明度已在六章、12 秒原生成片中作影格量測；360/360 幀完整解碼。這份最新草稿尚未在剪映介面手動開啟。較早的多軌、素材、字體案例已由使用者確認開啟、播放、保存與重開。
 
-這只證明上述版本與樣本的原生無介面匯出路徑可行。其他剪映版本、草稿格式、效果、轉場、關鍵影格、大工程及可配置編碼參數仍須分別驗證。影片解碼與結構檢查不能代替逐鏡畫面及聲音的人工驗收。
+已驗證樣本與其他版本、不同素材和更長工程是不同範圍；詳見 [功能對等清單](Windows功能對等清單.md)。
 
-## 使用
+## 命令
 
-先安裝 Visual Studio C++ Build Tools，並讓 `ffprobe`、`ffmpeg` 位於 `PATH`。在儲存庫根目錄執行：
+以下命令在儲存庫根目錄執行，`$Py` 指向固定依賴虛擬環境中的 `python.exe`。`--out` 和草稿名稱都必須尚未存在；先不加 `--write` 預檢，再用同一命令加上 `--write` 執行。
 
 ```powershell
-python engine\windows_native_export.py --draft-info 'D:\Program Files\JianyingPro Drafts\<草稿名稱>\draft_info.json' --out 'D:\原生匯出測試\<新的輸出資料夾>' --timeout 120
+$Py = 'C:\JianyingHeadlessRuntime\.venv\Scripts\python.exe'
+$Entry = '.\skills\yichen-jianying-edit\scripts\headless_draft.py'
+$DraftRoot = 'D:\Program Files\JianyingPro Drafts'
+& $Py $Entry doctor --draft-root $DraftRoot
+& $Py $Entry windows-workflow --plan 'C:\path\to\plan.json' --out 'C:\path\to\new-delivery' --draft-root $DraftRoot --font 'C:\Windows\Fonts\arial.ttf'
+& $Py $Entry windows-workflow --plan 'C:\path\to\plan.json' --out 'C:\path\to\new-delivery' --draft-root $DraftRoot --font 'C:\Windows\Fonts\arial.ttf' --write
 ```
 
-`--out` 必須是尚未存在的新資料夾。成功後得到 `render.mp4`、`evidence.json`、編譯與引擎日誌。工具不覆寫草稿或既有 MP4，也不讀取帳號資料。來源草稿引用的媒體檔案仍須在原路徑可讀。
+成功後交付目錄包含 `render.mp4`、`workflow_result.json`、工作草稿、原生輸出與驗證證據；剪映草稿目錄中另有可編輯草稿。報告的 `created-unverified-in-app` 表示程式流程完成，仍需在剪映介面檢查內容、保存並重開。
 
-本機工作區的 `outputs/windows_dual_workflow.py` 另可用同一份剪輯計畫建立可編輯草稿，並以 `--backend windows-native --write` 匯出 MP4。該整合腳本仍在工作區試驗區，尚未封裝為儲存庫的正式 Skill 命令。使用方式見工作區 `outputs/Windows雙輸出_使用說明.md`。
+需要把現成的受支援草稿單獨匯出時，使用：
 
-## 實作邊界
+```powershell
+& $Py $Entry windows-native-export --draft-info 'C:\path\to\draft\draft_info.json' --out 'C:\path\to\new-export'
+```
 
-Windows DLL 沒有公開穩定的匯出 SDK。橋接器使用經檢查的 MSVC ABI、精確 DLL 雜湊、這個版本的兩個內部函式位址及匯出設定欄位；剪映更新後必須重新分析和實測，不能沿用位址。官方 `lyra-cli.exe` 在獨立程序中回覆 `unauthorized host process`，本流程沒有更改或繞過它。
+輸出資料夾包含 `render.mp4`、`evidence.json`、`native-helper.log` 及解碼檢查日誌。工具不覆寫來源草稿與既有輸出。素材必須在草稿引用的路徑可讀。剪映介面保存後，`draft_info.json` 可能不是最新時間軸；遇到含加密側檔的草稿，不應把它直接當作最新版本匯出，先用 `windows-inspect` 唯讀檢查。
 
-原生引擎完成並關閉會話後，供應商執行緒在一般程序退出時可能不結束。橋接器只終止自己的隔離子程序；外層 Python 程序要求引擎完成事件、有效 MP4 及 FFmpeg 完整解碼，才回報成功。
+## 現有草稿的唯讀檢查與副本編輯
+
+`windows-inspect` 可檢查本機草稿的檔案雜湊、軌道與已知素材引用。若剪映保存後產生 `draft_content.json` 或 `Timelines`，報告會標出加密時間軸的權威性未知；此時 `draft_info.json` 可能不是最新內容。
+
+```powershell
+& $Py $Entry windows-inspect --source 'C:\path\to\draft'
+```
+
+只對本工具新建、尚未經剪映介面保存、僅含 `draft_info.json`、`draft_meta_info.json` 與 `materials` 的草稿，才可使用 `windows-edit`。先從 `windows-inspect` 結果取出**精確的文字片段 ID**，把操作存成 JSON 陣列，例如：
+
+```json
+[{"op":"replace_text","id":"從檢查報告複製的片段 ID","text":"修改後文字"}]
+```
+
+```powershell
+& $Py $Entry windows-edit --source 'C:\path\to\draft' --target 'C:\work\new-draft-copy' --operations 'C:\work\operations.json' --workspace 'C:\work'
+& $Py $Entry windows-edit --source 'C:\path\to\draft' --target 'C:\work\new-draft-copy' --operations 'C:\work\operations.json' --workspace 'C:\work' --write
+```
+
+第一行只檢查，第二行才建立新副本。還支援 `rename_track` 和 `set_segment` 對受支援類型的靜態音量／位置修改；未知操作、效果、加密草稿、含關鍵影格片段的靜態修改及既有目標均拒絕。副本建立時核對原件雜湊、重新綁定副本素材路徑並回讀。副本可再用 `windows-native-export --draft-info` 輸出，但介面保存與重開仍需人工驗收。
+
+## 與 FFmpeg 輸出的區別
+
+`windows-native` 使用本機剪映引擎，需固定 DLL 與可編輯草稿。`windows-ffmpeg` 用獨立渲染器直接從計畫輸出，支援面較小，成片像素與文字字形不保證和原生輸出相同；詳見 [Windows FFmpeg 輸出](windows-ffmpeg.md)。`export --backend windows-native` 與 `windows-native-export` 指向相同原生後端；兩者的輸入都是草稿 `draft_info.json`，不是 FFmpeg 的 `build` 目錄。
+
+## 原生介面邊界
+
+Windows DLL 沒有公開穩定的輸出 SDK。橋接器依賴已檢查的 MSVC ABI、精確 DLL 雜湊、固定版本內部函式位址及輸出設定欄位。剪映更新後應停止並重新分析、驗證。官方 `lyra-cli.exe` 在隔離程序中回覆 `unauthorized host process`；此流程沒有修改或繞過該限制。
+
+供應商執行緒在完成後可能不結束；橋接器只結束自己的隔離子程序。外層 Python 必須看到引擎完成事件、有效 MP4 和 FFmpeg 完整解碼，才回報成功。完整解碼仍需搭配畫面與聲音抽樣；六種幾何蒙版、疊化轉場和輕微抖動目前不列為 Windows 已支援功能。

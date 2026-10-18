@@ -1,6 +1,6 @@
 # Third-party notices and provenance
 
-This private preview preserves provenance. It is not a claim that all files,
+This source preview preserves provenance. It is not a claim that all files,
 schemas, techniques, external libraries, or generated videos are original to
 this project or covered by one license.
 
@@ -9,7 +9,7 @@ Non-Commercial Use License in [LICENSE](LICENSE). Existing third-party notices
 and permissions remain in effect for their respective portions; this project's
 custom license does not relicense or restrict the upstream MIT / Apache-2.0 materials.
 
-## pyJianYingDraft 0.3.0 — Apache-2.0
+## pyJianYingDraft upstream and fixed Windows fork — Apache-2.0
 
 - Upstream: <https://github.com/GuanYixuan/pyJianYingDraft>
 - Exact version license: <https://github.com/GuanYixuan/pyJianYingDraft/blob/0.3.0/LICENSE>
@@ -17,10 +17,16 @@ custom license does not relicense or restrict the upstream MIT / Apache-2.0 mate
 - Full retained text: [licenses/pyJianYingDraft-0.3.0-Apache-2.0.txt](licenses/pyJianYingDraft-0.3.0-Apache-2.0.txt).
 
 Earlier 11.x project adapters directly used this package to construct text
-objects and inspect media. Those historical adapters and the installed package
-are not included in this preview. The selected current engine does not directly
-import pyJianYingDraft; that observation is not a clean-room originality claim.
-The project history and reference relationship remain acknowledged here.
+objects and inspect media. The Windows draft builder now directly imports a
+fixed source checkout of the separately maintained
+[aoguai/pyJianYingDraft](https://github.com/aoguai/pyJianYingDraft), commit
+`2b6ed48b0f096e5a76a5b8a68a6d7d233defb463`, plus the two source patches
+under `third_party/pyJianYingDraft/patches/`. The fork retains Apache-2.0;
+see [licenses/Apache-2.0.txt](licenses/Apache-2.0.txt). The setup script
+downloads or reads that fixed source, checks the patched file hashes, then
+installs it into the user's local virtual environment. Neither fork checkout
+nor installed Python package is bundled in this repository. These facts do
+not constitute a clean-room originality claim.
 
 ## jy-draftc macOS sample — MIT
 
@@ -55,7 +61,8 @@ hashes and observed usage restrictions remain intact.
 
 Users must separately install the exact supported application from an
 authorized source. This repository does not contain the application,
-`libvideoeditor.dylib`, its built-in resources, or an application installer.
+`libvideoeditor.dylib`, Windows `videoeditor.dll`, its built-in resources, or
+an application installer.
 Calling internal interfaces is not equivalent to using a documented official
 SDK or obtaining integration permission.
 
@@ -91,9 +98,10 @@ Default builds and existing snapshot verification do not require the parser.
 The project license does not replace the dependency's MIT license or grant rights
 to font files supplied by users.
 
-## Python, macOS and Xcode toolchain
+## Python, macOS/Xcode and Windows/MSVC toolchains
 
-Python and Apple's developer tools are external prerequisites, not bundled
-assets. Their own terms continue to apply. Optional ASR executors and services
+Python, Apple's developer tools and Microsoft's Visual C++ Build Tools are
+external prerequisites, not bundled assets. Their own terms continue to apply.
+Optional ASR executors and services
 are also separate dependencies; this repository contains no service key and
 does not grant service access or paid inference permission.

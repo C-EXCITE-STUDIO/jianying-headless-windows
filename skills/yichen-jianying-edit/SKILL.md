@@ -1,58 +1,43 @@
 ---
 name: yichen-jianying-edit
-description: 在装有匹配版本剪映的 Apple Silicon Mac 上，无界面生成可编辑草稿、修改已有多轨草稿的独立副本，或按明确要求导出原生 MP4。需要另行检出 Jianying Headless 核心项目；纯转写不使用本 Skill。
+description: 在固定版本的 Windows 或 Apple Silicon macOS 上建立剪映可編輯草稿；按使用者要求產生原生 MP4，或唯讀檢查與安全副本編輯受支援草稿。需另行檢出 Jianying Headless 核心專案。
 ---
 
-# 剪映无界面剪辑
+# 剪映無介面剪輯
 
-默认交付可继续编辑的原生草稿。用户明确要求成片时才运行原生导出。
-无界面不等于无需安装剪映；此 Skill 不包含官方程序库或完整剪辑后端。
-主版本为 11.5.0，兼容 11.4.2；按当前安装的精确版本和指纹选择配置，不能混用两版导出快照。
-高清黑白滤镜与橙色描边花字已移除，不再列为待验功能；旧计划或快照含这两项时明确拒绝，不静默去掉效果。
+預設交付可繼續編輯的草稿；使用者要求成片時才執行 MP4 輸出。無介面操作仍需本機安裝匹配版本的剪映。此 Skill 不包含官方程式、DLL、字體、效果或媒體素材。
 
-## 先确认依赖和本次范围
+| 平台 | 已驗證版本 | 命令入口 |
+| --- | --- | --- |
+| Windows 11 | 剪映專業版 `11.5.0.14471` 與精確 DLL SHA-256；64 位元 Python 3.13.2 | `doctor`、`windows-draft`、`windows-install`、`windows-workflow`、`windows-native-export`、`windows-inspect`、`windows-edit` |
+| Apple Silicon macOS | 主版本 11.5.0，相容 11.4.2；精確安裝身分與 codec | `doctor`、`build`、`publish`、`edit`、`export` 等 |
 
-1. 按 [安装说明](README.md) 定位已获授权的核心项目检出目录。Skill 与核心项目
-   同仓时自动定位；独立安装时设置 `JIANYING_HEADLESS_ROOT`。不要从用户其他
-   项目、浏览器或聊天中搜集访问凭据，也不要自动复制官方库。
-2. 运行 `python3 SKILL/scripts/headless_draft.py doctor`。核心项目缺失或版本/hash
-   不符时停止原生操作；按报错修复依赖，不改固定版本和哈希来通过检查。
-3. 从请求确定素材、新建或修改、速度、音效/BGM及剪辑力度。沿用本次明确参数，
-   不沿用历史项目的速度和删减偏好；不明确的语义删减集中询问。
-4. 转写属于独立的可选依赖。存在 `$yichen-asr` 时按其说明执行；已提供逐词稿时
-   直接使用。需要付费转写必须有本次授权，不自动充值、切换服务商或重复提交。
+兩平台的介面和可驗收功能不同。Windows 的六類幾何蒙版、疊化轉場、輕微抖動仍未支援；高清黑白濾鏡與橙色描邊花字已移出原專案支援範圍。不要把未知效果靜默刪掉來通過檢查。Windows 已由剪映介面保存的加密草稿可唯讀 `windows-inspect`，目前不能用 `windows-edit` 修改。
 
-## 选择入口
+## 確認依賴與本次需求
 
-- 新建：读 [无界面计划与命令](references/headless-macos.md)。直接创建独立草稿，
-  不要求先在 UI 里准备模板；在线模板不在此发行范围。
-- Hypit 工程交接：读 [素材与字体交接](references/hypit-handoff.md)，将选定成片的素材、时间线和
-  实际字体文件写入新建计划；文字片段可用 `font_path` 直接指定字体。
-- 修改已有草稿：读 [独立副本编辑](references/edit-existing-macos.md)，保留原项目。
-- 明确要求成片：读 [原生导出](references/export-macos.md)，只导出已验证的冻结快照。
-- 口播语义剪辑：读 [语义与音频质检](references/editing-and-qc.md) 和
-  [口播计划格式](references/plan-format.md)，由 `scripts/edit_plan.py` 统一编译时间映射。
+1. 依 [安裝說明](README.md)定位已獲授權的核心專案檢出目錄。同倉時入口自動定位；獨立安裝時設定絕對路徑的 `JIANYING_HEADLESS_ROOT`。不要從其他專案、瀏覽器或聊天中搜集憑據，也不要自動複製官方庫。
+2. Windows 先依 [Windows 安裝](../../docs/windows-setup.md)準備固定依賴，執行虛擬環境 Python 的 `headless_draft.py doctor`；macOS 依 [macOS 入門](../../docs/GETTING-STARTED.md)構建 codec 後執行 `doctor`。核心檔、版本或 SHA-256 不符時停止原生操作，不改固定值強行通過。
+3. 從本次請求確定素材、新建或修改、速度、音效／BGM 和剪輯力度；不沿用其他項目的速度與刪減偏好。不明確的語義刪減集中詢問。
+4. 轉寫是獨立可選依賴。已提供逐詞稿時直接使用；若需付費轉寫，取得本次使用授權，不自動充值、換服務商或重複提交。
 
-## 执行与验收
+## 選擇流程
 
-- 源片保持不动；使用已授权的本地素材。字幕默认需要，样式按本次画面调整。
-  BGM 未提出则不加。不要删除难以确认的数字、产品名或核心判断。
-- `build` 只写本次隔离工作目录。`publish` / `resume-publish` 是本机剪映首页登记，
-  不是线上发布；执行前让用户保存工作并完全退出剪映，不强制结束进程。
-- 所有输出使用本次 `work/` 下的新目录。素材副本、hash、一致性和目录锁由工具核对；
-  不把 `--expect-*` 等一致性参数误当成需要用户逐项填写的审批问题。
-- 特效资源只能来自本机已合法取得的匹配缓存，保持原有许可字段与字节校验。
-  不下载、解锁、伪造授权，不能把缓存存在或技术渲染成功当作会员/商用许可。
-- 复合片段只能作为实验性的离线构建、修改与冻结快照导出；正式首页登记仍被阻止。
-  不把它交付成已经通过原生保存持久化验收的嵌套草稿。
-- 草稿需在剪映中检查画面、字幕、音量和切口，保存、退出并冷重开后回读。
-  缺少 UI 条件时继续离线部分，但明确标注原生验收未完成。
-- 导出后检查实际画面和声音。`encoded-and-decoded` 不代表全部内容正确；
-  默认草稿交付不生成临时 MP4。失败保留现场，不自动重试、去掉效果或替换成旧快照。
-- 保留原始素材和现有草稿；清理仅按本次明确授权执行，不自动永久删除文件。
+- Windows 新建及原生輸出：讀 [Windows 安裝與快速開始](../../docs/windows-setup.md)與[原生輸出](../../docs/windows-native-export.md)。`windows-workflow` 預設只做預檢，`--write` 才建立草稿並輸出 MP4；`windows-draft`／`windows-install` 可分步使用。
+- Windows 既有草稿：先 `windows-inspect --source`；只有本工具新建、尚未由剪映介面保存的明文 JSON 草稿可用 `windows-edit --source ... --target ... --operations ... --workspace ... [--write]` 建立副本。精確使用片段／軌道 ID；不修改原件。其他格式保持唯讀。
+- Windows 不需剪映的成片：讀 [FFmpeg 輸出](../../docs/windows-ffmpeg.md)。其功能與畫面不保證與原生後端一致。
+- macOS 新建、修改與原生輸出：分別讀 [無介面計畫](references/headless-macos.md)、[獨立副本編輯](references/edit-existing-macos.md)、[原生輸出](references/export-macos.md)。
+- Hypit 工程交接：讀 [素材與字體交接](references/hypit-handoff.md)。口播剪輯讀 [語義與音訊質檢](references/editing-and-qc.md)及[口播計畫格式](references/plan-format.md)。
 
-## 安装范围与许可
+## 執行與驗收
 
-该 Skill 与公开核心项目分别安装；只安装 Skill 不包含完整后端。
-代码许可、剪映协议、素材许可和账号权益分别适用。相关声明见
-[运行依赖与来源](references/dependencies-and-notices.md)。
+- 使用獲授權的本機素材；來源保持不動。字幕預設需要，BGM 未提出則不加。不要刪除難以確認的數字、產品名或核心判斷。
+- 每次使用新的工作目錄、草稿名稱和輸出目錄。工具核對素材雜湊與目標不覆寫；不要把一致性參數誤作需使用者逐項批准的事項。
+- macOS 的 `publish`／`resume-publish` 僅指本機首頁登記，不是線上發布。執行前請使用者保存工作並正常退出剪映，不強制結束其程序。Windows 的 `windows-install` 只處理受支援草稿副本。
+- 原生效果只使用本機合法取得的匹配資源，不下載、解鎖或偽造權益；技術輸出成功不等於會員或商業使用許可。
+- 草稿須在剪映中檢查畫面、文字、音量和切口，保存、正常退出後冷重開。缺少 UI 驗收時明確標示未完成；導出後檢查實際畫面和聲音，完整解碼不能代替內容驗收。
+- 失敗時保留日誌與輸出現場，不自動重試、去掉效果或用舊快照冒充結果。保留原始素材和既有草稿，不自動永久刪除。
+
+## 授權與來源
+
+Skill 與核心專案可分開安裝；只裝 Skill 不含完整後端。原創程式碼授權、剪映協議、素材許可和帳號權益分別適用。詳見[依賴與來源](references/dependencies-and-notices.md)。
