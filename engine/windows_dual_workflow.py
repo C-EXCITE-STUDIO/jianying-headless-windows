@@ -21,6 +21,7 @@ import ffmpeg_tools  # noqa: E402
 import windows_export  # noqa: E402
 import windows_native_export  # noqa: E402
 import windows_portable  # noqa: E402
+import windows_doctor  # noqa: E402
 
 
 def read_plan(path: Path) -> dict[str, Any]:
@@ -52,11 +53,22 @@ def preflight(plan: dict[str, Any], output: Path, draft_root: Path,
         raise PlanError("文字片段缺少 font，請補上每段字體或指定 --font")
     if font is not None and (not font.is_file() or font.is_symlink()):
         raise PlanError(f"字體不存在或是連結：{font}")
-    ffprobe = ffmpeg_tools.resolve_tool("ffprobe", None, "JIANYING_FFPROBE")
     if backend not in {"windows-ffmpeg", "windows-native"}:
         raise PlanError(f"不支援的匯出後端：{backend}")
     if backend == "windows-ffmpeg" and any("font" in segment for segment in text_segments):
         raise PlanError("windows-ffmpeg 暫不支援每段不同字體；請用 windows-native")
+    media_files = [Path(segment["source"]) for track in plan["tracks"]
+                   if track["type"] in {"video", "audio"}
+                   for segment in track["segments"]]
+    font_files = [Path(segment["font"]) for segment in text_segments
+                  if "font" in segment]
+    if font is not None:
+        font_files.append(font)
+    windows_doctor.require_environment(draft_root=draft_root,
+                                       media_files=media_files,
+                                       font_files=font_files,
+                                       output=output, backend=backend)
+    ffprobe = ffmpeg_tools.resolve_tool("ffprobe", None, "JIANYING_FFPROBE")
     # FFmpeg 建置器尚未渲染旋轉／透明度及其關鍵影格。原生草稿由
     # bridge.validate 檢查這些欄位；此副本只用於素材類型與時長預檢。
     probe_plan = deepcopy(plan) if backend == "windows-native" else plan

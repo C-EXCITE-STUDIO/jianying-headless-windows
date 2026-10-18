@@ -1,0 +1,9 @@
+# Verified on Windows with Python 3.13.2 and Jianying 11.5.0.14471.
+# pyJianYingDraft is installed from the fixed source plus local patches by
+# tools/setup_windows.ps1; it is deliberately absent from this pip list.
+comtypes==1.4.17
+ImageIO==2.38.1
+numpy==2.5.3
+pillow==12.3.0
+pymediainfo==7.0.1
+uiautomation==2.0.29

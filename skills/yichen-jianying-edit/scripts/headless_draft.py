@@ -53,7 +53,8 @@ PINS = {
     'ffmpeg_tools.py': 'c8d0817c57573e0e755f3277466fa13e08bdc588d90471344faaf30438e9992f',
     'windows_draft_bridge.py': '2ce0793812e146d5855c858fd7b067b967a5a4c5dc3548c405a123e6caab7ea8',
     'windows_draft_install.py': '69807812688ba8cf2b3416a9ef74f8c4bfdaacb9a6307ebc1cf242b703544984',
-    'windows_dual_workflow.py': 'e17c8296076111d004554be9e61fb2b9e3fa12aa9a85e36ff929b8b202ba1d04',
+    'windows_dual_workflow.py': 'b43ed9d4459d44eded2828a50a0eafcfbbcabf19110db5dd11bf954a557e3a61',
+    'windows_doctor.py': 'a64fcd3e31aa83dc44e096ab3ec0e0ab10133a5f686e0dfaa64b239404280c52',
     'windows_native_export.py': '6f41a5f03d9765cc64b4469dc1698f7eab304404b4f966bb6265f132a7d4fef6',
     'windows_native_export.cpp': 'fbdf626d66f1b98b12006fbfa9bdba547a46b6e7b6f86cd259c27f7a835983f4',
 }
@@ -101,6 +102,9 @@ elif command in {'windows-draft', 'windows-install', 'windows-workflow', 'window
                   'windows-install': 'windows_draft_install.py',
                   'windows-workflow': 'windows_dual_workflow.py',
                   'windows-native-export': 'windows_native_export.py'}[command]
+    del sys.argv[1]
+elif command == 'doctor' and os.name == 'nt':
+    entrypoint = 'windows_doctor.py'
     del sys.argv[1]
 elif os.name == 'nt':
     if command not in {None, '--help', '-h', 'doctor', 'build', 'verify-build'}:

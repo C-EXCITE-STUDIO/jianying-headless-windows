@@ -16,6 +16,11 @@ LOCAL_CODEC = 'bridge/jy14_codec_hardened_11_4'
 SUFFIXES = {'.py', '.cpp', '.h', '.json', '.md', '.yaml', '.txt'}
 SPECIAL = {'.gitignore', '.gitattributes', 'NOTICE', 'LICENSE'}
 WORKFLOWS = {'.github/workflows/windows-ffmpeg.yaml'}
+WINDOWS_SETUP = {'tools/setup_windows.ps1'}
+DEPENDENCY_PATCHES = {
+    'third_party/pyJianYingDraft/patches/0001-Sum-per-frame-GIF-durations-for-Windows-drafts.patch': 'dfcaf1db77c31383a5ade61b30a1fdecf00d226aac96f67cd7b3fe8cfbf4ccaf',
+    'third_party/pyJianYingDraft/patches/0002-Preserve-local-font-binding-in-ordinary-text-materia.patch': 'dfb3d5fb7bd6bae5c6a4735e1b2a3796b6096f8338d0510ce4c3f56b300c6288',
+}
 # User-approved public IG case derivatives. Never turn this into a general
 # media extension allowance: exact bytes, size and path are release-reviewed.
 PUBLIC_MEDIA = {
@@ -73,7 +78,8 @@ def source_files():
             if relative.startswith('.github/'):
                 require(relative in WORKFLOWS, 'Unreviewed GitHub automation: ' + relative)
             require(path.is_file() and not path.is_symlink(), 'Nonregular source: ' + relative)
-            require(path.suffix in SUFFIXES or name in SPECIAL or relative in PUBLIC_MEDIA,
+            require(path.suffix in SUFFIXES or name in SPECIAL or relative in PUBLIC_MEDIA
+                    or relative in WINDOWS_SETUP or relative in DEPENDENCY_PATCHES,
                     'Unexpected source type: ' + relative)
             files.append(path)
     return sorted(files)
@@ -88,6 +94,9 @@ def main():
             inventory[relative] = verify_public_media(path, relative)
             continue
         raw = path.read_bytes()
+        if relative in DEPENDENCY_PATCHES:
+            require(hashlib.sha256(raw).hexdigest() == DEPENDENCY_PATCHES[relative],
+                    'Dependency patch differs: ' + relative)
         require(b'\x00' not in raw, 'Binary content in source: ' + relative)
         content = raw.decode('utf-8-sig')
         if relative in WORKFLOWS:

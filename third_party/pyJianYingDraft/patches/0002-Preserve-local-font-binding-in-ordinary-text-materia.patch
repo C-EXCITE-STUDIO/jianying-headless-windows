@@ -1,0 +1,52 @@
+From 846068b51ff75bf449e6fbbdccdad62049dcc2c1 Mon Sep 17 00:00:00 2001
+From: mozzi <mozzi@cexcite.studio>
+Date: Sat, 10 Oct 2026 14:39:22 +0800
+Subject: [PATCH 2/2] Preserve local font binding in ordinary text materials
+
+---
+ pyJianYingDraft/text_segment.py | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/pyJianYingDraft/text_segment.py b/pyJianYingDraft/text_segment.py
+index 3a25b3f..5623fe7 100644
+--- a/pyJianYingDraft/text_segment.py
++++ b/pyJianYingDraft/text_segment.py
+@@ -338,7 +338,7 @@ class TextSegment(VisualSegment):
+             text (`str` or `List[str]`): 文本内容；若传入字符串列表则表示多段落，将用换行符拼接
+             timerange (`Timerange`): 片段在轨道上的时间范围
+             font (`Font_type`, optional): 字体类型, 默认为系统字体
+-            font_path (`str`, optional): 已验证的本机系统字体路径，仅写入字幕顶层元数据
++            font_path (`str`, optional): 已验证的本机字体路径，写入文本素材的顶层元数据
+             style (`TextStyle`, optional): 字体样式, 包含大小/颜色/对齐/透明度等.
+             clip_settings (`ClipSettings`, optional): 图像调节设置, 默认不做任何变换
+             border (`TextBorder`, optional): 文本描边参数, 默认无描边
+@@ -556,6 +556,15 @@ class TextSegment(VisualSegment):
+                     "path": "C:"  # 占位 path
+                 }
+ 
++        if self.font_path:
++            # 原生渲染器从 content.styles[].font 读取普通文本使用的字体。
++            # 顶层 font_path 仍需保留给草稿的本地素材路径映射。
++            for style in styles:
++                existing = style.get("font")
++                if existing and existing.get("id"):
++                    raise ValueError("本机 font_path 不可与在线字体混用")
++                style["font"] = {"id": "", "path": self.font_path}
++
+         content_json = {
+             "styles": styles,
+             "text": self.text
+@@ -756,6 +765,10 @@ class TextSegment(VisualSegment):
+                 ret["shadow_distance"] = float(self.shadow.distance)
+                 ret["shadow_color"] = _rgb_to_hex(self.shadow.color)
+         else:
++            # 一般文字也使用顶层 font_path；剪映自身建立的 text 素材同样保存此字段。
++            # 保留空值时的旧结构，避免改变未指定字体的既有草稿。
++            if self.font_path:
++                ret["font_path"] = self.font_path
+             if self.style_ranges:
+                 ret["is_rich_text"] = True
+ 
+-- 
+2.48.1.windows.1
+

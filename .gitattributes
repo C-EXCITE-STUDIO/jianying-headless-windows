@@ -11,3 +11,5 @@ LICENSE text eol=lf
 NOTICE text eol=lf
 *.png binary
 *.mp4 binary
+*.patch text eol=lf
+*.ps1 text eol=lf
