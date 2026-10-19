@@ -36,4 +36,17 @@ python -m unittest engine.test_windows_ffmpeg -v
 python .\tools\windows_ci_evidence.py
 ```
 
-GitHub 工作流程只使用一般 `pull_request` 事件與唯讀權限；FFmpeg 發行檔以不可變資產 ID 和 SHA-256 綁定。公開案例使用經審閱、可再分發的素材；私有草稿、帳號資料、系統字體與個人路徑不會由此流程上傳。
+GitHub 工作流程只使用一般 `pull_request` 事件與唯讀權限。它依固定的發行資產 ID 下載經審閱的 FFmpeg 壓縮檔，核對精確 SHA-256，並確認 `ffmpeg` 與 `ffprobe` 都來自該壓縮檔且回報固定版本。公開案例使用經審閱、可再分發的素材；私有草稿、帳號資料、系統字體與個人路徑不會上傳。IG 案例也會核對成片的音訊平均音量是否符合指定的 0.5 增益，保留不含路徑的 `audio-gain.json` 報告。
+
+### CI 使用的 FFmpeg 來源
+
+| 項目 | 固定值 |
+| --- | --- |
+| 版本 | gyan.dev FFmpeg 8.1.2 essentials，靜態 x64、GPLv3（`8.1.2-essentials_build-www.gyan.dev`） |
+| 發行頁 | [GyanD/codexffmpeg 8.1.2](https://github.com/GyanD/codexffmpeg/releases/tag/8.1.2)，2026-06-27 發布 |
+| 檔案 | `ffmpeg-8.1.2-essentials_build.zip`，資產 ID `459500679`，109,728,040 位元組 |
+| SHA-256 | `db580001caa24ac104c8cb856cd113a87b0a443f7bdf47d8c12b1d740584a2ec` |
+
+2026-10-15 的審核確認：下載內容同時符合 GitHub 記錄的摘要與 gyan.dev 公布的校驗值。壓縮檔只有一層頂層目錄，包含 `ffmpeg.exe`、`ffprobe.exe`、`ffplay.exe`、授權、說明、預設設定及 HTML 文件；沒有 DLL、腳本、連結或上層目錄路徑。兩個工具皆為 x64，可用 libx264、libfreetype、libharfbuzz 和 libfribidi；AAC 編碼器已內建。
+
+先前固定的 BtbN 自動建置資產（ID `574819415` 和 `583988006`，後者為 FFmpeg n8.1.3）已由上游移除並回傳 HTTP 404，因此 CI 改用 gyan.dev 的版本化發行檔。如果此資產消失或內容變動，工作流程會停止；須重新審核替代版本並同時更新本表與工作流程，不可取消或放寬摘要檢查。
