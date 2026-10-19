@@ -1,6 +1,6 @@
 # Windows 安裝與快速開始
 
-本頁用一段合成素材完成：**乾淨的依賴目錄 → 環境診斷 → 可編輯草稿 → Windows 剪映原生 MP4**。命令在包含本地 Windows 變更的 `jianying-headless` 儲存庫根目錄執行。這些變更目前仍在本地分支；公開 GitHub 基線未必包含此頁提及的命令。取得另一份檢出時，先確認它含有 `tools/setup_windows.ps1` 與 `engine/windows_dual_workflow.py`。
+本頁用一段合成素材完成：**乾淨的依賴目錄 → 環境診斷 → 可編輯草稿 → Windows 剪映原生 MP4**。請從 [Windows 版本倉庫](https://github.com/C-EXCITE-STUDIO/jianying-headless-windows)取得原始碼，在儲存庫根目錄執行命令。確認檢出中有 `tools/setup_windows.ps1` 與 `engine/windows_dual_workflow.py`。
 
 ## 前置條件
 
@@ -10,15 +10,17 @@
 | Python | 64 位元 3.13.2；`doctor` 最低接受 64 位元 3.10，但其他版本未完成端到端驗收 |
 | 剪映 | 專業版 `11.5.0.14471`；`videoeditor.dll` SHA-256 必須為 `37cadef37daff82e2ecdcd65080b9cbd7f6f9436f5e56c1ffb90c52c408eb7fb` |
 | 工具 | Git、MSVC C++ Build Tools 的 `vcvars64.bat`、PATH 上可執行的 FFmpeg 與 ffprobe |
-| 草稿目錄 | 剪映設定中實際使用的本機草稿根目錄；此工作區為 `D:\Program Files\JianyingPro Drafts` |
+| 草稿目錄 | 以剪映設定中實際使用的本機草稿根目錄為準；第 2 步會要求輸入 |
 
 剪映應由使用者另外安裝。本儲存庫不含官方程式、DLL、帳號資料或私人素材；`docs/media/` 另有經授權的公開案例衍生件。先用 `python --version`、`git --version`、`ffmpeg -version`、`ffprobe -version` 確認命令可執行。沒有精確剪映版本時，先停在環境診斷，不調低雜湊檢查。
 
 ## 1. 安裝固定依賴
 
-在 PowerShell 進入本儲存庫根目錄。`$RuntimeDir` 必須是尚不存在的新路徑；重裝時換新名稱並保留舊目錄供檢查。
+先在 PowerShell 取得原始碼並進入儲存庫根目錄。`$RuntimeDir` 必須是尚不存在的新路徑；重裝時換新名稱並保留舊目錄供檢查。
 
 ```powershell
+git clone https://github.com/C-EXCITE-STUDIO/jianying-headless-windows.git
+Set-Location .\jianying-headless-windows
 $RuntimeDir = Join-Path $env:USERPROFILE 'Documents\JianyingHeadlessRuntime'
 & .\tools\setup_windows.ps1 -Target $RuntimeDir -PythonExecutable (Get-Command python).Source
 $Py = Join-Path $RuntimeDir '.venv\Scripts\python.exe'
@@ -30,7 +32,7 @@ $Entry = '.\skills\yichen-jianying-edit\scripts\headless_draft.py'
 ## 2. 只讀診斷
 
 ```powershell
-$DraftRoot = 'D:\Program Files\JianyingPro Drafts'
+$DraftRoot = Read-Host '請輸入剪映設定中的草稿根目錄'
 & $Py $Entry doctor --draft-root $DraftRoot
 ```
 

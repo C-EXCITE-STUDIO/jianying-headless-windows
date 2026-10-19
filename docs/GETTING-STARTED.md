@@ -25,7 +25,7 @@
 
 剪映官方入口为 [剪映官网](https://www.capcut.cn/)。官网可能只提供新版，本项目不提供安装包，也没有确认长期可用的官方 11.5.0 下载地址。已有新版时，不要为试用直接降级或覆盖旧草稿；没有匹配版本，应先停在环境准备阶段。
 
-本项目采用[个人学习和非商业使用许可](../LICENSE)，不应按 MIT / Apache-2.0 的商业开源项目理解。
+本倉庫原創程式碼採用 [MIT 授權](../LICENSE)；第三方內容繼續適用各自授權，剪映程式、素材與帳號權益不由此授權涵蓋。
 
 ## 第 1 步：打开终端，确认电脑
 
@@ -94,8 +94,8 @@ ffprobe -version
 
 ```bash
 cd ~/Documents
-git clone https://github.com/mcncarl/jianying-headless.git
-cd jianying-headless
+git clone https://github.com/C-EXCITE-STUDIO/jianying-headless-windows.git
+cd jianying-headless-windows
 ```
 
 **成功标志：**文件夹中能看到 `README.md`、`engine`、`tools` 和 `skills`。
@@ -105,7 +105,7 @@ cd jianying-headless
 从此步骤起，命令都在项目根目录执行。新开终端后先运行：
 
 ```bash
-cd ~/Documents/jianying-headless
+cd ~/Documents/jianying-headless-windows
 ```
 
 ## 第 5 步：检查条件，构建桥接组件

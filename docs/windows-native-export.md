@@ -18,7 +18,7 @@ Windows 正式入口可從 `jy14-headless-plan/v1` 建立可編輯草稿、複�
 ```powershell
 $Py = 'C:\JianyingHeadlessRuntime\.venv\Scripts\python.exe'
 $Entry = '.\skills\yichen-jianying-edit\scripts\headless_draft.py'
-$DraftRoot = 'D:\Program Files\JianyingPro Drafts'
+$DraftRoot = Read-Host '請輸入剪映設定中的草稿根目錄'
 & $Py $Entry doctor --draft-root $DraftRoot
 & $Py $Entry windows-workflow --plan 'C:\path\to\plan.json' --out 'C:\path\to\new-delivery' --draft-root $DraftRoot --font 'C:\Windows\Fonts\arial.ttf'
 & $Py $Entry windows-workflow --plan 'C:\path\to\plan.json' --out 'C:\path\to\new-delivery' --draft-root $DraftRoot --font 'C:\Windows\Fonts\arial.ttf' --write

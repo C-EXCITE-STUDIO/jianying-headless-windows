@@ -4,10 +4,10 @@ This source preview preserves provenance. It is not a claim that all files,
 schemas, techniques, external libraries, or generated videos are original to
 this project or covered by one license.
 
-The project's original contributions are subject to the Personal Learning and
-Non-Commercial Use License in [LICENSE](LICENSE). Existing third-party notices
-and permissions remain in effect for their respective portions; this project's
-custom license does not relicense or restrict the upstream MIT / Apache-2.0 materials.
+The project's original contributions are licensed under the MIT License in
+[LICENSE](LICENSE). Existing third-party notices and permissions remain in
+effect for their respective portions; this project's MIT grant does not
+relicense or restrict the upstream MIT / Apache-2.0 materials.
 
 ## pyJianYingDraft upstream and fixed Windows fork — Apache-2.0
 

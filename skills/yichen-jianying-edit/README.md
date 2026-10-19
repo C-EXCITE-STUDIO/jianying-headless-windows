@@ -1,16 +1,17 @@
 # yichen-jianying-edit
 
-這是 Jianying Headless 的獨立 Agent Skill，包含說明、口播計畫編譯器及固定雜湊的呼叫入口。它不包含剪映引擎，也不把核心源碼複製進 Skill 目錄。現有正式入口支援固定版本 Windows 與 Apple Silicon macOS，平台能力見 [SKILL.md](SKILL.md)。
+這是 Jianying Headless 的獨立 Agent Skill，包含說明、口播計畫編譯器及固定雜湊的呼叫入口。它不包含剪映引擎，也不把核心源碼複製進 Skill 目錄。現有正式入口支援固定版本 Windows 與 Apple Silicon macOS，平台能力見 [SKILL.md](SKILL.md)。本發行版源自 [mcncarl/jianying-headless](https://github.com/mcncarl/jianying-headless)。
 
-Skill 公开收录于 [yichen-skills](https://github.com/mcncarl/yichen-skills/tree/main/yichen-jianying-edit)，
-核心项目也已公开；仍需单独检出核心代码并安装匹配版本的剪映。
+Skill 也收錄於 [yichen-skills](https://github.com/mcncarl/yichen-skills/tree/main/yichen-jianying-edit)；
+該外部倉庫的版本依其自身授權，本倉庫的 MIT 授權適用於本倉庫版本。使用時仍需
+單獨檢出核心程式碼並安裝匹配版本的剪映。
 
 ## 安装
 
-1. 检出 [mcncarl/jianying-headless](https://github.com/mcncarl/jianying-headless) 的公开源码。
+1. 檢出 [C-EXCITE-STUDIO/jianying-headless-windows](https://github.com/C-EXCITE-STUDIO/jianying-headless-windows) 的公開原始碼。
 2. Windows 依 [Windows 安裝](../../docs/windows-setup.md)建立固定依賴虛擬環境；macOS 在核心儲存庫執行 `python3 tools/build_native_codec.py`。兩平台接著執行本 Skill 的 `doctor`。
 3. 将本目录作为一个完整 Skill 安装到宿主支持的技能目录；不要只复制 `SKILL.md`。
-4. Skill 不在核心仓库内时，设置 `JIANYING_HEADLESS_ROOT=/absolute/path/to/jianying-headless`。
+4. Skill 不在核心倉庫內時，設定 `JIANYING_HEADLESS_ROOT=/absolute/path/to/jianying-headless-windows`。
 
 ```powershell
 # Windows：使用固定依賴虛擬環境中的 python.exe
@@ -39,5 +40,6 @@ Windows：目前完整驗證 Windows 11、64 位元 Python 3.13.2、剪映專業
 
 ## 许可
 
-原创部分采用[个人学习和非商业使用条款](LICENSE)，商业用途须取得作者明确书面授权。
-第三方内容保留各自原许可证；本 Skill 不授予剪映程序库、账号、素材或服务的使用权。
+原創部分採用 [MIT 授權](LICENSE)。第三方內容保留各自原授權；本 Skill
+不授予剪映程式庫、帳號、素材或服務的使用權。來源與相應聲明見
+[依賴與來源](references/dependencies-and-notices.md)。

@@ -2,6 +2,8 @@
 
 面向剪映專業版 macOS 與固定版本 Windows 的本機自動化工具。透過結構化剪輯計畫產生可編輯草稿，並呼叫本機剪映引擎輸出 MP4。
 
+本倉庫保留 [mcncarl/jianying-headless](https://github.com/mcncarl/jianying-headless) 的提交歷史與作者署名，並收錄 Windows 版本。兩個平台的支援範圍與驗證條件分別列於下方。
+
 **macOS：主要適配 11.5.0、相容 11.4.2；Windows：僅驗證 11.5.0.14471 的精確二進位版本。**
 
 首次使用：Windows 請讀 [Windows 安裝與快速開始](docs/windows-setup.md)，macOS 請讀 [macOS 從零開始](docs/GETTING-STARTED.md)。兩個平台都需匹配精確的本機剪映版本與工具鏈；目前不保證任意電腦安裝即用。
@@ -85,8 +87,8 @@ Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与�
 ## macOS 快速開始
 
 ```bash
-git clone https://github.com/mcncarl/jianying-headless.git
-cd jianying-headless
+git clone https://github.com/C-EXCITE-STUDIO/jianying-headless-windows.git
+cd jianying-headless-windows
 python3 tools/build_native_codec.py
 python3 skills/yichen-jianying-edit/scripts/headless_draft.py doctor
 ```
@@ -132,7 +134,7 @@ python3 skills/yichen-jianying-edit/scripts/headless_draft.py export \
 Skill 不包含剪映引擎；独立安装后仍需检出核心项目，并指定其路径：
 
 ```bash
-export JIANYING_HEADLESS_ROOT="/absolute/path/to/jianying-headless"
+export JIANYING_HEADLESS_ROOT="/absolute/path/to/jianying-headless-windows"
 ```
 
 安装说明见 [独立 Skill](skills/yichen-jianying-edit/README.md)。
@@ -168,7 +170,7 @@ python3 -m unittest discover -s tests -v
 
 ## 许可与来源
 
-原创部分采用 [个人学习和非商业使用许可](LICENSE)；商业使用需取得作者书面授权。
-第三方内容继续适用原许可证，详见 [第三方声明](THIRD_PARTY_NOTICES.md)。
-本项目不是 MIT / Apache-2.0 整包授权，代码许可也不包含剪映集成授权、账号权益或素材许可。
+本倉庫的原創程式碼採用 [MIT 授權](LICENSE)，保留原作者與貢獻者署名。
+第三方內容仍適用各自的授權，例如 pyJianYingDraft 的 Apache-2.0 與 jy-draftc 的 MIT；詳見 [第三方聲明](THIRD_PARTY_NOTICES.md)。
+程式碼授權不包含剪映程式與資源、帳號權益、字體或使用者素材的授權。
 分发边界见 [分发范围](docs/DISTRIBUTION-SCOPE.md)。

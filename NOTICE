@@ -10,6 +10,6 @@ Historical pyJianYingDraft use and the licenses of external tools are described
 in THIRD_PARTY_NOTICES.md. Those notices do not grant rights to proprietary
 engines, media, effects, fonts, account entitlements, or service access.
 
-This project's original portions are subject to the Personal Learning and
-Non-Commercial Use License in LICENSE. Third-party portions retain their
-original licenses; copies of those texts do not license the whole project.
+This project's original contributions are licensed under the MIT License in
+LICENSE. Third-party portions retain their original licenses; this MIT grant
+does not relicense third-party code or the proprietary Jianying application.
