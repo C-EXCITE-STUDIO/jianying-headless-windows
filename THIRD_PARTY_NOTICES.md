@@ -98,6 +98,17 @@ Default builds and existing snapshot verification do not require the parser.
 The project license does not replace the dependency's MIT license or grant rights
 to font files supplied by users.
 
+## Openverse / Freesound 音效 — 各素材獨立授權
+
+選用 `scripts/openverse_sfx.py` 時，工具會透過 Openverse 搜尋並下載 Freesound 的
+音效預覽；本倉庫不附帶下載的音效。程式碼的 MIT 授權不涵蓋這些第三方素材。
+每段音效可能標示為 [CC0](https://creativecommons.org/publicdomain/zero/1.0/)、
+[CC BY](https://creativecommons.org/licenses/by/4.0/) 或
+[CC BY-NC](https://creativecommons.org/licenses/by-nc/4.0/)；實際版本及來源見
+每次執行產生的 `credits.md`。CC BY 與 CC BY-NC 有署名要求，CC BY-NC 限非商業用途。
+商業用途應使用 `--commercial` 排除 CC BY-NC，並於發佈前核對原始素材頁面及署名。
+Openverse 的彙整資訊不能代替對原始授權的查核。
+
 ## Python, macOS/Xcode and Windows/MSVC toolchains
 
 Python, Apple's developer tools and Microsoft's Visual C++ Build Tools are

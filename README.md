@@ -1,10 +1,10 @@
 # Jianying Headless
 
-面向剪映專業版 macOS 與固定版本 Windows 的本機自動化工具。透過結構化剪輯計畫產生可編輯草稿，並呼叫本機剪映引擎輸出 MP4。
+面向剪映專業版 macOS 與固定版本 Windows 的本機自動化工具。透過結構化剪輯計畫產生可編輯草稿；支援的版本可由本機剪映引擎無介面輸出 MP4，macOS 11.6.0 則可使用剪映介面匯出並驗證。
 
 本倉庫保留 [mcncarl/jianying-headless](https://github.com/mcncarl/jianying-headless) 的提交歷史與作者署名，並收錄 Windows 版本。兩個平台的支援範圍與驗證條件分別列於下方。
 
-**macOS：主要適配 11.5.0、相容 11.4.2；Windows：僅驗證 11.5.0.14471 的精確二進位版本。**
+**macOS：主要適配 11.5.0、相容 11.4.2；11.6.0 支援新建與編輯草稿及介面匯出驗證，無介面原生匯出尚未適配。Windows：僅驗證 11.5.0.14471 的精確二進位版本。**
 
 首次使用：Windows 請讀 [Windows 安裝與快速開始](docs/windows-setup.md)，macOS 請讀 [macOS 從零開始](docs/GETTING-STARTED.md)。兩個平台都需匹配精確的本機剪映版本與工具鏈；目前不保證任意電腦安裝即用。
 
@@ -21,7 +21,7 @@
 | 基礎動畫 | macOS 與 Windows 原生流程支援受驗證通道的線性關鍵影格；Windows FFmpeg 僅支援其文件列出的子集 |
 | 原生效果 | macOS：六類靜態幾何蒙版、疊化轉場、輕微抖動；Windows 暫不支援這三項效果 |
 | 編輯已有工程 | macOS：多軌草稿副本編輯；Windows：唯讀檢查現有草稿，僅支援本工具新建、尚未經剪映介面保存的草稿作安全副本編輯 |
-| 原生视频导出 | 通过本机剪映引擎将已验证快照导出为 H.264/AAC MP4 |
+| 視訊匯出 | macOS 11.5.0／11.4.2 與固定 Windows 11.5.0 可由本機剪映引擎無介面輸出 H.264/AAC MP4；macOS 11.6.0 改用剪映介面匯出與 `ui-export` 驗證 |
 | 环境与工程检查 | 核对运行版本、组件身份、素材完整性和草稿保存结果 |
 
 核心流程为：**素材与剪辑计划 → 可编辑剪映草稿 → 原生引擎导出**。
@@ -40,6 +40,12 @@ Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与�
 使用方法和限制见 [Windows FFmpeg 导出](docs/windows-ffmpeg.md)。
 
 该独立导出后端由 [@instantgoing](https://github.com/instantgoing) 在 [PR #1](https://github.com/mcncarl/jianying-headless/pull/1) 中贡献。
+
+## macOS 11.6.0 新增路徑
+
+上游新增精確的 macOS 11.6.0 草稿配置、保存回讀規則及本地字體驗收，可建立草稿並編輯已有工程的副本。`export` 無介面原生匯出仍會拒絕此版本；已登記的非複合草稿可由剪映自己的對話框匯出 MP4，再以 `ui-export` 檢查容器、編碼、精確幀數及完整解碼。這條路會開啟並改寫被匯出的草稿，操作與驗證邊界見 [介面匯出說明](docs/UI-EXPORT.md)和[驗證紀錄](docs/VERIFICATION.md)。
+
+可選的 [Openverse 自動音效](skills/yichen-jianying-edit/references/dependencies-and-notices.md)會聯網搜尋 Freesound 預覽並把選定音效加入草稿；音效各自的授權與署名要求仍須核對。11.6.0 的複合片段可離線檢查及構建副本，但尚不能登記首頁或經上述介面路徑交付成片。
 
 ## Hypit 协作案例
 
@@ -73,7 +79,7 @@ Windows 云端使用本仓库公开 IG 案例验证了完整解码、帧数与�
 ## macOS 執行環境
 
 - Apple Silicon Mac，macOS 26.0+；已验证环境为 macOS 26.5.1。
-- 剪映专业版 11.5.0，或兼容配置对应的 11.4.2。
+- 剪映专业版 11.5.0，或兼容配置对应的 11.4.2；11.6.0（官方 build 13281）支持新建草稿（含蒙版、叠化转场、轻微抖动）和编辑已有草稿副本。无界面 `export` 仍拒绝，已登记的非复合草稿可走界面导出与 `ui-export` 验证；复合片段只能离线检查及构建，首页登记仍拒绝。
 - Python 3.9+、FFmpeg / ffprobe、Xcode Command Line Tools。
 - 已验证桥接工具链：Apple clang 21.0.0 / macOS SDK 26.5。
 
@@ -161,9 +167,20 @@ Skill 另收录于 [yichen-skills](https://github.com/mcncarl/yichen-skills/tree
 | `tools/`、`tests/` | 构建、源码包装检查与可移植测试 |
 | `licenses/` | 第三方许可证 |
 
+macOS 可執行完整 `tests/` 離線測試：
+
 ```bash
 python3 tools/check_package.py
 python3 -m unittest discover -s tests -v
+```
+
+Windows 請執行套件檢查與 Windows 專屬測試；完整 `tests/` 包含依賴 macOS `fcntl` 的測試：
+
+```powershell
+python tools/check_package.py
+python -m unittest discover -s tests -p test_package.py -v
+python -m unittest discover -s tests -p test_public_media.py -v
+python -m unittest engine.test_windows_doctor engine.test_windows_draft_bridge engine.test_windows_draft_install engine.test_windows_existing_draft engine.test_windows_ffmpeg engine.test_windows_native_export -v
 ```
 
 专项原生测试的本机素材与证据不随仓库分发；源码检查不能替代实际工程验收。

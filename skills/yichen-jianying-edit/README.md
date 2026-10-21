@@ -28,11 +28,15 @@ python3 /absolute/path/to/yichen-jianying-edit/scripts/headless_draft.py doctor
 
 ## 运行前提
 
-Windows：目前完整驗證 Windows 11、64 位元 Python 3.13.2、剪映專業版 11.5.0.14471 的精確 DLL 身分、MSVC、FFmpeg／ffprobe 與固定修補依賴。macOS：Apple Silicon、Python 3.9+、FFmpeg／ffprobe、Xcode 編譯工具；11.5.0 為主版本，11.4.2 為相容版本，11.4.0 僅保留歷史草稿配置。導出快照必須與當前運行版本一致。這些驗證不構成任意電腦或任意剪映版本的相容承諾。
+Windows：目前完整驗證 Windows 11、64 位元 Python 3.13.2、剪映專業版 11.5.0.14471 的精確 DLL 身分、MSVC、FFmpeg／ffprobe 與固定修補依賴。macOS：Apple Silicon、Python 3.9+、FFmpeg／ffprobe、Xcode 編譯工具；11.5.0 為主要無介面導出版本，11.4.2 為相容版本，11.4.0 僅保留歷史草稿配置。11.6.0 已驗證新建、編輯副本及剪映介面導出檢查，無介面原生 `export` 仍拒絕；詳見[介面導出](../../docs/UI-EXPORT.md)。導出快照必須與當前運行版本一致。這些驗證不構成任意電腦或任意剪映版本的相容承諾。
 
 剪辑计划可以直接由用户或 Agent 提供，不强制使用付费 ASR。`asr_once.py` 仅是可选
 去重包装器，需要另行提供兼容的转写执行器；`YICHEN_ASR_EXECUTOR` 可以指定它的
 本机路径，默认检查当前用户的 `scripts/transcribe.py`。该执行器及任何凭据不随包分发。
+
+自动音效同样是可选步骤：`openverse_sfx.py` 联网访问 Openverse 与 Freesound，挑选的
+音效保留各自的 CC 许可，其中 CC BY-NC 禁止商用。不需要时不运行它；草稿 build/publish
+不联网。
 
 详细操作见 [SKILL.md](SKILL.md)。本 Skill 不授权自动上传视频、公开草稿、购买资源
 或将剪映官方文件重新分发。来源和许可边界见
